@@ -14,6 +14,6 @@ PastSeasons = [
 ]
 
 """
-The season that we're predicting results for
+The season that we're predicting results for.
 """
 CurrentSeason = 20252026
