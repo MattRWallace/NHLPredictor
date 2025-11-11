@@ -38,5 +38,5 @@ TeamMap = {
     "VGK": 38,              # Golden Knights
     "SEA": 55,              # Kraken
     "UTA": 40,              # Mammoth
-    "ARI": 40               # Arizona -- Back compat for Mammoth
+    "ARI": 40,              # Arizona -- Back compat for Mammoth
 }

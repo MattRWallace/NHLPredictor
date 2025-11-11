@@ -43,9 +43,11 @@ class GameEntry:
             loser_score = homeTeamScore
             loser_sog = homeTeamSog
 
-        winning_franchise = (TeamMap[homeTeamAbbrev]
+        winning_franchise = (
+            TeamMap[homeTeamAbbrev]
             if homeTeamScore > awayTeamScore
-            else TeamMap[awayTeamAbbrev])
+            else TeamMap[awayTeamAbbrev]
+            )
 
         obj =  cls(
             json_data["periodDescriptor"]["number"], 
