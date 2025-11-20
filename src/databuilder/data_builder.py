@@ -1,4 +1,3 @@
-import csv
 import json
 import logging
 
@@ -7,9 +6,9 @@ from nhlpy import NHLClient
 
 from model.game_entry import GameEntry
 from model.game_type import GameType
+from model.player_info import PlayerInfo
 from model.seasons import PastSeasons
 from model.team_map import TeamMap
-from model.player_info import PlayerInfo
 
 logger = logging.getLogger("BuildData")
 logging.basicConfig(filename="buildData.log", level=logging.INFO)
@@ -59,11 +58,11 @@ class DataBuilder:
                                 box_score["playerByGameStats"]["awayTeam"]
                                 )
                             
-                            # TODO: Need to move winner determination from game entry to here. It doesn't make sense
-                            #   encapsualated that way anyways
-                            entry = f"{repr(GameEntry.from_json(box_score))},{homeRoster},{awayRoster}"
+                            entry = GameEntry.from_json(box_score)
+                            entry.add_roster(homeRoster, awayRoster)
+                            
                             logger.info(f"Adding game entry to data set: '{entry}'.")
-                            data.append(entry.split(','))
+                            data.append(repr(entry).split(','))
 
                         except Exception as e:
                             print("\033[31mException occured. Check logs.\033[0m")
@@ -73,14 +72,9 @@ class DataBuilder:
                     print("\033[31mException occured. Check logs.\033[0m")
                     logger.exception(f"Exception processing team_season_schedule query. Exception: '{str(e)}', games: '{json.dumps(games, indent=4)}', box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True)
 
-
-            df = pd.DataFrame(data)
-            df.to_csv(f"{season}.csv", index=False, header=False, quoting=csv.QUOTE_NONE, escapechar="\\")
+            df = pd.DataFrame(data, columns=GameEntry.get_headers())
+            df.to_csv(f"{season}.csv", index=False)
                                 
-                
-        #print(data) # TODO: remove debugging statement
-        print(f"Total games added to database: '{len(games_processed)}'.") # TODO: Remove debugging statement
-
         logger.info("Completed data fetch")
 
     @staticmethod
@@ -93,7 +87,6 @@ class DataBuilder:
     @staticmethod
     def summarize_skaters(players):
         player_objects = []
-        
         for player in players:
             player_objects.append(PlayerInfo.from_json(player))
         
@@ -127,24 +120,24 @@ class DataBuilder:
             blocked_shots += player.blocked_shots
             giveaways += player.giveaways
             takeaways += player.takeaways
+
         
         # TODO: can't just average the FO %, it needs to be weighted    
         summary = PlayerInfo(
-            goals / count,
-            assists / count,
-            points / count,
-            plus_minus / count,
-            pim / count,
-            hits / count,
-            pp_goals / count,
-            sog / count,
-            faceoff_win_pct / count,
-            toi / count,
-            blocked_shots / count,
-            giveaways / count,
-            takeaways / count
+            goals,
+            assists,
+            points,
+            plus_minus,
+            pim,
+            hits,
+            pp_goals,
+            sog,
+            faceoff_win_pct,
+            toi,
+            blocked_shots,
+            giveaways,
+            takeaways
         )
-        
         return repr(summary)
     
     @staticmethod

@@ -1,11 +1,8 @@
 from datetime import timedelta
 
-#import pandas as pd
-
 """
 Class to represent a single player's stats set.
 """
-    
 class PlayerInfo:
     
     def __init__(
@@ -37,11 +34,13 @@ class PlayerInfo:
         self.blocked_shots = blocked_shots
         self.giveaways = giveaways
         self.takeaways = takeaways
-    
+
+    """
+    Initialize a PlayerInfo object from JSON data
+    """   
     @classmethod
     def from_json(cls, json_data):
         # TODO: Need to gracefully handle missing data
-        
         toi = json_data["toi"]
         toi = timedelta(hours=int(toi[:-3]), minutes=int(toi[-2:])).total_seconds()
         
@@ -64,15 +63,15 @@ class PlayerInfo:
         return obj
     
     """
-    serialize the game data into a row for the CSV file
+    serialize the player data as a csv string
     """
     def __repr__(self):
         return (
             f"{self.goals},{self.assists},"
             f"{self.points},{self.plus_minus},"
-            f"{self.pim},{self.hits}"
-            f"{self.pp_goals},{self.sog}"
-            f"{self.faceoff_win_pct},{self.toi}"
-            f"{self.blocked_shots},{self.giveaways}"
+            f"{self.pim},{self.hits},"
+            f"{self.pp_goals},{self.sog},"
+            f"{self.faceoff_win_pct},{self.toi},"
+            f"{self.blocked_shots},{self.giveaways},"
             f"{self.takeaways}"
             )
