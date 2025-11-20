@@ -8,6 +8,7 @@ from model.game_entry import GameEntry
 from model.game_type import GameType
 from model.seasons import PastSeasons
 from model.team_map import TeamMap
+from model.player_info import PlayerInfo
 
 logger = logging.getLogger("BuildData")
 logging.basicConfig(filename="buildData.log", level=logging.INFO)
@@ -15,16 +16,16 @@ logger.info("Starting data fetch")
 
 
 class DataBuilder:
+    
+    _client = NHLClient()
 
+    @staticmethod
     def build_games():
         
         """
         Avoid multiple rows for a single game by recoding the IDs for games already processed.
         """
         games_processed = []
-
-
-        client = NHLClient()
 
         for season in PastSeasons:
             data = []
@@ -34,7 +35,7 @@ class DataBuilder:
                 try:
                     logger.info(f"Start processing for team '{team}' in season '{season}'.")
                     
-                    games = client.schedule.team_season_schedule(team, season)["games"]
+                    games = DataBuilder._client.schedule.team_season_schedule(team, season)["games"]
                     logger.info(f"Found '{len(games)}' games for team '{team}' in season '{season}'.")
                     
                     for game in games:
@@ -43,11 +44,23 @@ class DataBuilder:
                                 logger.info(f"Skipping game '{game["id"]}' which was already processed.")
                                 continue
                             games_processed.append(game["id"])
-                            box_score = client.game_center.boxscore(game["id"])
+                            box_score = DataBuilder._client.game_center.boxscore(game["id"])
                             if box_score["gameType"] != GameType.RegularSeason.value:
                                 logger.info(f"Skipping game '{game["id"]}' which is not a regular season game.")
                                 continue
-                            entry = repr(GameEntry.from_json(box_score))
+                            
+                            # Get roster scores
+                            homeRoster = DataBuilder.build_players(
+                                box_score["playerByGameStats"]["homeTeam"]
+                                )
+                            
+                            awayRoster = DataBuilder.build_players(
+                                box_score["playerByGameStats"]["awayTeam"]
+                                )
+                            
+                            # TODO: Need to move winner determination from game entry to here. It doesn't make sense
+                            #   encapsualated that way anyways
+                            entry = f"{repr(GameEntry.from_json(box_score))},{homeRoster},{awayRoster}"
                             logger.info(f"Adding game entry to data set: '{entry}'.")
                             data.append(entry)
 
@@ -69,5 +82,70 @@ class DataBuilder:
 
         logger.info("Completed data fetch")
 
-    def build_players():
-        print("build_players not implemented.")
+    @staticmethod
+    def build_players(roster):
+        forwards = DataBuilder.summarize_skaters(roster["forwards"])
+        defense = DataBuilder.summarize_skaters(roster["defense"])
+        # home_goalies = DataBuilder.summarize_goalie(homeRoster["goalies"])
+        return f"{forwards},{defense}"
+        
+    @staticmethod
+    def summarize_skaters(players):
+        player_objects = []
+        
+        for player in players:
+            player_objects.append(PlayerInfo.from_json(player))
+        
+        count = 0   
+        goals = 0
+        assists = 0
+        points = 0
+        plus_minus = 0
+        pim = 0
+        hits = 0
+        pp_goals = 0
+        sog = 0
+        faceoff_win_pct = 0
+        toi = 0
+        blocked_shots = 0
+        giveaways = 0
+        takeaways = 0
+        
+        for player in player_objects:
+            count += 1
+            goals += player.goals
+            assists += player.assists
+            points += player.points
+            plus_minus += player.plus_minus
+            pim += player.pim
+            hits += player.hits
+            pp_goals += player.pp_goals
+            sog += player.sog
+            faceoff_win_pct += player.faceoff_win_pct
+            toi += player.toi
+            blocked_shots += player.blocked_shots
+            giveaways += player.giveaways
+            takeaways += player.takeaways
+        
+        # TODO: can't just average the FO %, it needs to be weighted    
+        summary = PlayerInfo(
+            goals / count,
+            assists / count,
+            points / count,
+            plus_minus / count,
+            pim / count,
+            hits / count,
+            pp_goals / count,
+            sog / count,
+            faceoff_win_pct / count,
+            toi / count,
+            blocked_shots / count,
+            giveaways / count,
+            takeaways / count
+        )
+        
+        return repr(summary)
+    
+    @staticmethod
+    def summarize_goalie(players):
+        pass
