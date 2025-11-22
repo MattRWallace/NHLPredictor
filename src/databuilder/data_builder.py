@@ -1,5 +1,6 @@
 import json
 import logging
+import sys
 
 import pandas as pd
 from nhlpy import NHLClient
@@ -18,15 +19,14 @@ logger.info("Starting data fetch")
 
 class DataBuilder:
     
-    _client = NHLClient()
-
     @staticmethod
     def build():
         testSummarizer = NaivePlayerSummarizer()
-        DataBuilder.build_games(testSummarizer)
+        client = NHLClient()
+        DataBuilder.build_games(testSummarizer, client)
 
     @staticmethod
-    def build_games(summarizer):
+    def build_games(summarizer, client):
         
         """
         Avoid multiple rows for a single game by recoding the IDs for games already processed.
@@ -41,7 +41,7 @@ class DataBuilder:
                 try:
                     logger.info(f"Start processing for team '{team}' in season '{season}'.")
                     
-                    games = DataBuilder._client.schedule.team_season_schedule(team, season)["games"]
+                    games = client.schedule.team_season_schedule(team, season)["games"]
                     logger.info(f"Found '{len(games)}' games for team '{team}' in season '{season}'.")
                     
                     for game in games:
@@ -50,7 +50,7 @@ class DataBuilder:
                                 logger.info(f"Skipping game '{game["id"]}' which was already processed.")
                                 continue
                             games_processed.append(game["id"])
-                            box_score = DataBuilder._client.game_center.boxscore(game["id"])
+                            box_score = client.game_center.boxscore(game["id"])
                             if box_score["gameType"] != GameType.RegularSeason.value:
                                 logger.info(f"Skipping game '{game["id"]}' which is not a regular season game.")
                                 continue

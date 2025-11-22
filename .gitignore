@@ -2,7 +2,6 @@
 /venv/
 *.log
 __pycache__/
-/reference/
 *.csv
 /dist/
 /NHLStats.egg-info/
