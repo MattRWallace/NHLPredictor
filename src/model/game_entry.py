@@ -11,18 +11,16 @@ class GameEntry:
     def __init__(
             self, 
             num_periods, 
-            winner_score, 
-            winner_sog,
-            loser_score,
-            loser_sog,
-            winning_franchise,
+            home_score, 
+            home_sog,
+            away_score,
+            away_sog,
             winner_home_or_away):
         self._num_periods = num_periods
-        self._winner_score = winner_score
-        self._winner_sog = winner_sog
-        self._loser_score = loser_score
-        self._loser_sog = loser_sog
-        self._winning_franchise = winning_franchise
+        self._home_score = home_score
+        self._home_sog = home_sog
+        self._away_score = away_score
+        self._away_sog = away_sog
         self._winner_home_or_away = winner_home_or_away
 
         logger.info("GameEntry created..")
@@ -34,95 +32,95 @@ class GameEntry:
     def get_headers(cls):
         return [
             "periods",
-            "winnerScore",
-            "winnerSOG",
-            "loserScore",
-            "loserSOG",
-            "winnerForwardGoals",
-            "winnerForwardAssists",
-            "winnerForwardPoints",
-            "winnerForwardPlusMinus",
-            "winnerForwardPIM",
-            "winnerForwardHits",
-            "winnerForwardPPG",
-            "winnerForwardSOG",
-            "winnerForwardFaceoffPct",
-            "winnerForwardTOI",
-            "winnerForwardBlockedShots",
-            "winnerForwardGivaways",
-            "winnerForwardTakeaways",
-            "winnerDefenseGoals",
-            "winnerDefenseAssists",
-            "winnerDefensePoints",
-            "winnerDefensePlusMinus",
-            "winnerDefensePIM",
-            "winnerDefenseHits",
-            "winnerDefensePPG",
-            "winnerDefenseSOG",
-            "winnerDefenseFaceoffPct",
-            "winnerDefenseTOI",
-            "winnerDefenseBlockedShots",
-            "winnerDefenseGivaways",
-            "winnerDefenseTakeaways",
-            "winnerGoalieEvenStrengthShotsAgainst",
-            "winnerGoalieEvenStrengthSaves",
-            "winnerGoaliePowerPlayShotsAgainst",
-            "winnerGoaliePowerPlaySaves",
-            "winnerGoalieShortHandedShotsAgainst",
-            "winnerGoalieShortHandedSaves",
-            "winnerGoalieSaveShotsAgainst",
-            "winnerGoalieSavePct",
-            "winnerGoalieEvenStrengthGoalsAgainst",
-            "winnerGoaliePowerPlayGoalsAgainst",
-            "winnerGoalieShortHandedGoalsAgainst",
-            "winnerGoaliePIM",
-            "winnerGoalieGoalsAgainst",
-            "winnerGoalieTOI",
-            "winnerGoalieShotsAgainst",
-            "winnerGoalieSaves",
-            "loserForwardGoals",
-            "loserForwardAssists",
-            "loserForwardPoints",
-            "loserForwardPlusMinus",
-            "loserForwardPIM",
-            "loserForwardHits",
-            "loserForwardPPG",
-            "loserForwardSOG",
-            "loserForwardFaceoffPct",
-            "loserForwardTOI",
-            "loserForwardBlockedShots",
-            "loserForwardGivaways",
-            "loserForwardTakeaways",
-            "loserDefenseGoals",
-            "loserDefenseAssists",
-            "loserDefensePoints",
-            "loserDefensePlusMinus",
-            "loserDefensePIM",
-            "loserDefenseHits",
-            "loserDefensePPG",
-            "loserDefenseSOG",
-            "loserDefenseFaceoffPct",
-            "loserDefenseTOI",
-            "loserDefenseBlockedShots",
-            "loserDefenseGivaways",
-            "loserDefenseTakeaways",
-            "loserGoalieEvenStrengthShotsAgainst",
-            "loserGoalieEvenStrengthSaves",
-            "loserGoaliePowerPlayShotsAgainst",
-            "loserGoaliePowerPlaySaves",
-            "loserGoalieShortHandedShotsAgainst",
-            "loserGoalieShortHandedSaves",
-            "loserGoalieSaveShotsAgainst",
-            "loserGoalieSavePct",
-            "loserGoalieEvenStrengthGoalsAgainst",
-            "loserGoaliePowerPlayGoalsAgainst",
-            "loserGoalieShortHandedGoalsAgainst",
-            "loserGoaliePIM",
-            "loserGoalieGoalsAgainst",
-            "loserGoalieTOI",
-            "loserGoalieShotsAgainst",
-            "loserGoalieSaves",
-            "winnerFranchiseId"
+            "homeScore",
+            "homeSOG",
+            "awayScore",
+            "awaySOG",
+            "homeForwardGoals",
+            "homeForwardAssists",
+            "homeForwardPoints",
+            "homeForwardPlusMinus",
+            "homeForwardPIM",
+            "homeForwardHits",
+            "homeForwardPPG",
+            "homeForwardSOG",
+            "homeForwardFaceoffPct",
+            "homeForwardTOI",
+            "homeForwardBlockedShots",
+            "homeForwardGivaways",
+            "homeForwardTakeaways",
+            "homeDefenseGoals",
+            "homeDefenseAssists",
+            "homeDefensePoints",
+            "homeDefensePlusMinus",
+            "homeDefensePIM",
+            "homeDefenseHits",
+            "homeDefensePPG",
+            "homeDefenseSOG",
+            "homeDefenseFaceoffPct",
+            "homeDefenseTOI",
+            "homeDefenseBlockedShots",
+            "homeDefenseGivaways",
+            "homeDefenseTakeaways",
+            "homeGoalieEvenStrengthShotsAgainst",
+            "homeGoalieEvenStrengthSaves",
+            "homeGoaliePowerPlayShotsAgainst",
+            "homeGoaliePowerPlaySaves",
+            "homeGoalieShortHandedShotsAgainst",
+            "homeGoalieShortHandedSaves",
+            "homeGoalieSaveShotsAgainst",
+            "homeGoalieSavePct",
+            "homeGoalieEvenStrengthGoalsAgainst",
+            "homeGoaliePowerPlayGoalsAgainst",
+            "homeGoalieShortHandedGoalsAgainst",
+            "homeGoaliePIM",
+            "homeGoalieGoalsAgainst",
+            "homeGoalieTOI",
+            "homeGoalieShotsAgainst",
+            "homeGoalieSaves",
+            "awayForwardGoals",
+            "awayForwardAssists",
+            "awayForwardPoints",
+            "awayForwardPlusMinus",
+            "awayForwardPIM",
+            "awayForwardHits",
+            "awayForwardPPG",
+            "awayForwardSOG",
+            "awayForwardFaceoffPct",
+            "awayForwardTOI",
+            "awayForwardBlockedShots",
+            "awayForwardGivaways",
+            "awayForwardTakeaways",
+            "awayDefenseGoals",
+            "awayDefenseAssists",
+            "awayDefensePoints",
+            "awayDefensePlusMinus",
+            "awayDefensePIM",
+            "awayDefenseHits",
+            "awayDefensePPG",
+            "awayDefenseSOG",
+            "awayDefenseFaceoffPct",
+            "awayDefenseTOI",
+            "awayDefenseBlockedShots",
+            "awayDefenseGivaways",
+            "awayDefenseTakeaways",
+            "awayGoalieEvenStrengthShotsAgainst",
+            "awayGoalieEvenStrengthSaves",
+            "awayGoaliePowerPlayShotsAgainst",
+            "awayGoaliePowerPlaySaves",
+            "awayGoalieShortHandedShotsAgainst",
+            "awayGoalieShortHandedSaves",
+            "awayGoalieSaveShotsAgainst",
+            "awayGoalieSavePct",
+            "awayGoalieEvenStrengthGoalsAgainst",
+            "awayGoaliePowerPlayGoalsAgainst",
+            "awayGoalieShortHandedGoalsAgainst",
+            "awayGoaliePIM",
+            "awayGoalieGoalsAgainst",
+            "awayGoalieTOI",
+            "awayGoalieShotsAgainst",
+            "awayGoalieSaves",
+            "winnerHomeOrAway"
         ]
 
     """
@@ -137,42 +135,23 @@ class GameEntry:
     def from_json(cls, json_data):
         logger.info(f"Creating GameEntry from JSON data. JSON:'{json_data}'.")
 
-        homeTeamAbbrev = json_data["homeTeam"]["abbrev"]
         homeTeamScore = json_data["homeTeam"]["score"]
         homeTeamSog = json_data["homeTeam"]["sog"]
-        awayTeamAbbrev = json_data["awayTeam"]["abbrev"]
         awayTeamScore = json_data["awayTeam"]["score"]
         awayTeamSog = json_data["awayTeam"]["sog"]
 
         if homeTeamScore > awayTeamScore:
-            logger.info("Winner is home team.")
             winner_home_or_away = HomeOrAway.HOME
-            winning_franchise = TeamMap[homeTeamAbbrev]
         else:
-            logger.info("Winner is away team.")
             winner_home_or_away = HomeOrAway.AWAY
-            winning_franchise = TeamMap[awayTeamAbbrev]
-
-        if winner_home_or_away == HomeOrAway.HOME:
-            winner_score = homeTeamScore
-            winner_sog = homeTeamSog
-            loser_score = awayTeamScore
-            loser_sog = awayTeamSog
-        else:
-            winner_score = awayTeamScore
-            winner_sog = awayTeamSog
-            loser_score = homeTeamScore
-            loser_sog = homeTeamSog
 
         obj =  cls(
             json_data["periodDescriptor"]["number"], 
-            winner_score,
-            winner_sog,
-            loser_score,
-            loser_sog,
-            #winning_franchise,
-            winner_home_or_away.value,
-            winner_home_or_away
+            homeTeamScore,
+            homeTeamSog,
+            awayTeamScore,
+            awayTeamSog,
+            winner_home_or_away.value
             )
         logger.info("Created GameEntry from JSON data.")
 
@@ -192,8 +171,8 @@ class GameEntry:
     """
     def __repr__(self):
         return (
-            f"{self._num_periods},{self._winner_score},"
-            f"{self._winner_sog},{self._loser_score},"
-            f"{self._loser_sog},{self._winning_roster},"
-            f"{self._losing_roster},{self._winning_franchise}"
+            f"{self._num_periods},{self._home_score},"
+            f"{self._home_sog},{self._away_score},"
+            f"{self._away_sog},{self._winning_roster},"
+            f"{self._losing_roster},{self._winner_home_or_away}"
             )
