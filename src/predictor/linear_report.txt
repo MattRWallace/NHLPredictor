@@ -116,3 +116,122 @@ Coef:  [ 5.77184334e-01 -9.17348515e-01 -2.58098121e+00 -2.10465066e-01
  -3.18065867e-01 -6.34132619e+00 -2.32157072e-04  3.16715831e+00
  -2.70606461e+00]
 Intercept:  7.424850896523868
+
+
+# With Home/Away target column
+R-squared:  0.887647173635941
+P-Values:  const                                  1.442855e-06
+periods                                6.842741e-01
+homeScore                              7.791113e-84
+homeSOG                                3.204574e-01
+awayScore                              6.862712e-98
+awaySOG                                2.603853e-01
+homeForwardGoals                       1.374200e-02
+homeForwardAssists                     2.043546e-02
+homeForwardPoints                      9.363855e-03
+homeForwardPlusMinus                   2.439245e-03
+homeForwardPIM                         2.381281e-01
+homeForwardHits                        5.024148e-01
+homeForwardPPG                         5.880920e-08
+homeForwardSOG                         2.359870e-01
+homeForwardFaceoffPct                  8.118314e-01
+homeForwardTOI                         1.141820e-04
+homeForwardBlockedShots                7.875493e-02
+homeForwardGivaways                    3.113429e-01
+homeForwardTakeaways                   1.113292e-03
+homeDefenseGoals                       1.656238e-02
+homeDefenseAssists                     2.086943e-02
+homeDefensePoints                      1.361009e-02
+homeDefensePlusMinus                   2.973548e-15
+homeDefensePIM                         1.361353e-02
+homeDefenseHits                        8.102943e-01
+homeDefensePPG                         4.167667e-07
+homeDefenseSOG                         2.471219e-01
+homeDefenseFaceoffPct                  5.558230e-01
+homeDefenseTOI                         1.031279e-03
+homeDefenseBlockedShots                8.713310e-01
+homeDefenseGivaways                    4.634236e-01
+homeDefenseTakeaways                   2.605516e-03
+homeGoalieEvenStrengthShotsAgainst     4.651995e-01
+homeGoalieEvenStrengthSaves            5.052539e-01
+homeGoaliePowerPlayShotsAgainst        8.831829e-01
+homeGoaliePowerPlaySaves               9.000276e-01
+homeGoalieShortHandedShotsAgainst      3.385350e-01
+homeGoalieShortHandedSaves             3.318819e-01
+homeGoalieSaveShotsAgainst             1.244331e-01
+homeGoalieSavePct                      1.067123e-03
+homeGoalieEvenStrengthGoalsAgainst     5.393204e-01
+homeGoaliePowerPlayGoalsAgainst        3.773342e-01
+homeGoalieShortHandedGoalsAgainst      4.243174e-01
+homeGoaliePIM                          8.344780e-01
+homeGoalieGoalsAgainst                 4.264132e-01
+homeGoalieTOI                         3.184008e-155
+homeGoalieShotsAgainst                 1.244331e-01
+homeGoalieSaves                        1.789149e-01
+awayForwardGoals                       9.609082e-02
+awayForwardAssists                     1.168168e-01
+awayForwardPoints                      7.936604e-02
+awayForwardPlusMinus                   4.203058e-06
+awayForwardPIM                         1.559691e-01
+awayForwardHits                        8.121511e-01
+awayForwardPPG                         2.062964e-14
+awayForwardSOG                         6.196899e-01
+awayForwardFaceoffPct                  8.008458e-02
+awayForwardTOI                         2.337298e-05
+awayForwardBlockedShots                6.992451e-01
+awayForwardGivaways                    2.677148e-01
+awayForwardTakeaways                   2.069610e-01
+awayDefenseGoals                       7.526567e-02
+awayDefenseAssists                     7.375142e-02
+awayDefensePoints                      7.813508e-02
+awayDefensePlusMinus                   1.195978e-20
+awayDefensePIM                         5.452348e-01
+awayDefenseHits                        3.738191e-01
+awayDefensePPG                         1.469036e-14
+awayDefenseSOG                         6.149736e-01
+awayDefenseFaceoffPct                  2.012592e-01
+awayDefenseTOI                         1.287033e-04
+awayDefenseBlockedShots                3.045422e-02
+awayDefenseGivaways                    8.990707e-01
+awayDefenseTakeaways                   3.282047e-01
+awayGoalieEvenStrengthShotsAgainst     1.545590e-01
+awayGoalieEvenStrengthSaves            2.641599e-01
+awayGoaliePowerPlayShotsAgainst        7.622658e-01
+awayGoaliePowerPlaySaves               8.802261e-01
+awayGoalieShortHandedShotsAgainst      5.369562e-01
+awayGoalieShortHandedSaves             6.203157e-01
+awayGoalieSaveShotsAgainst             8.326862e-02
+awayGoalieSavePct                      6.397105e-04
+awayGoalieEvenStrengthGoalsAgainst     8.377090e-03
+awayGoaliePowerPlayGoalsAgainst        1.637372e-01
+awayGoalieShortHandedGoalsAgainst      8.169757e-01
+awayGoaliePIM                          3.652633e-01
+awayGoalieGoalsAgainst                 7.271586e-01
+awayGoalieTOI                         5.861044e-148
+awayGoalieShotsAgainst                 8.326862e-02
+awayGoalieSaves                        1.069847e-02
+dtype: float64
+Coef:  [-6.35836629e-03 -4.79112219e-01 -9.66069054e-02  5.19349873e-01
+  7.66661247e-02  1.15708979e-01 -5.48298845e-02  6.08790947e-02
+ -2.49904178e-02  1.10329720e-03  3.63101167e-04 -3.74089073e-01
+ -6.18108266e-02 -7.72421521e-04  2.14054863e-06 -1.95905688e-03
+  1.13558774e-03  4.28155251e-03  1.12675021e-01 -5.47420951e-02
+  5.79329256e-02 -8.87336525e-02  2.90469475e-03 -2.02398761e-04
+ -3.58628499e-01 -6.04233782e-02  5.04823041e-02  2.66341110e-06
+ -1.46344749e-04  9.50417791e-04 -6.01603415e-03  4.44329050e-02
+ -4.43827067e-02  1.26203942e-02 -1.09437598e-02 -1.25313813e-01
+  1.22595342e-01  6.72688756e-02  5.46243370e-02 -4.00276962e-02
+  8.44683603e-02 -1.06040072e-01 -1.21238269e-03 -6.15994074e-02
+  3.02345150e-05  6.72688756e-02 -6.82605140e-02 -9.18050259e-02
+  4.34139870e-02 -4.83910390e-02  3.99481640e-02 -1.36338867e-03
+ -1.23435169e-04  4.19699050e-01  3.00394900e-02 -5.63421584e-03
+ -2.40073233e-06 -4.38444978e-04 -1.15384369e-03 -1.52751619e-03
+ -9.81597720e-02  4.95242073e-02 -4.86355648e-02  1.04957230e-01
+ -7.15493323e-04 -7.41916059e-04  4.31609706e-01  3.04580713e-02
+ -1.54342164e-01 -3.04896175e-06  2.01184689e-03  1.60166808e-04
+  1.83195457e-03  6.21743359e-02 -5.10760201e-02  1.78634616e-02
+ -8.70317700e-03  6.81737404e-03  3.48078761e-03 -5.62984095e-02
+ -5.53876380e-02  1.32999621e-01 -1.08997051e-01 -3.33658643e-03
+  5.69518381e-03  2.06659835e-02 -2.97648483e-05 -5.62984095e-02
+  8.68551715e-02]
+Intercept:  1.7300860290651934
