@@ -8,6 +8,7 @@ from sklearn.metrics import r2_score, mean_squared_error
 
 from model.seasons import PastSeasons
 from model.average_player_summarizer import AveragePlayerSummarizer
+from model.utility import Utility
 from loggingconfig.logging_config import LoggingConfig
 from databuilder.data_builder import DataBuilder
 
@@ -41,8 +42,30 @@ class Predictor:
             logger.info(f"Processing game. ID: '{game["id"]}'.")
             box_score = client.game_center.boxscore(game["id"])
             data.append(DataBuilder.process_game(game, box_score, summarizer))
+            
+        df = pd.DataFrame(data)
+        targetsColumnName = df.columns[len(df.columns)-1]
+        actual = df[targetsColumnName].to_list()
+        df.drop(targetsColumnName, axis=1, inplace=True)
         
-        print(data)
+        
+        data_pred = model.predict(df)
+        
+        if len(data_pred) != len(actual):
+            logger.error("Predictions and actual values vary in length")
+            return
+        
+        table = [["Predicted", "Actual"]]
+        for i in range(len(data_pred)):
+            table.append([data_pred[i], actual[i]])
+            
+        for row in table:
+            print(f"{row[0]}\t{row[1]}")
+        
+        
+        # print(f"Predicted: '{data_pred}'.")
+        # print(f"Actual: '{actual}'.")
+        
         
     @staticmethod
     def get_todays_games(client):
