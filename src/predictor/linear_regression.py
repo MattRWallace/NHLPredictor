@@ -1,20 +1,18 @@
+from datetime import datetime, UTC, timedelta
 import numpy as np
 import pandas as pd
-import json
+
 from nhlpy import NHLClient
+from pickle import load
 import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score, mean_squared_error
 
+from databuilder.data_builder import DataBuilder
+from loggingconfig.logging_config import LoggingConfig
 from model.seasons import PastSeasons
 from model.average_player_summarizer import AveragePlayerSummarizer
 from model.utility import Utility
-from loggingconfig.logging_config import LoggingConfig
-from databuilder.data_builder import DataBuilder
-
-from pickle import load
-
-from datetime import datetime, UTC, timedelta
 
 logger = LoggingConfig.get_logger(__name__)
 
@@ -57,10 +55,11 @@ class Predictor:
         
         table = [["Predicted", "Actual"]]
         for i in range(len(data_pred)):
-            table.append([data_pred[i], actual[i]])
+            table.append([str(np.rint(data_pred[i])), str(actual[i])])
             
-        for row in table:
-            print(f"{row[0]}\t{row[1]}")
+        # for row in table:
+        #     print(f"{row[0]}\t{row[1]}")
+        Utility.print_table(table)
         
         
         # print(f"Predicted: '{data_pred}'.")
