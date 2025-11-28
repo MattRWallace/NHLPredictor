@@ -1,43 +1,42 @@
+from pickle import load
+
 import dateutil.parser as parser
 import numpy as np
 import pandas as pd
 
-from nhlpy import NHLClient
-from pickle import load
-
 from databuilder.data_builder import DataBuilder
 from loggingconfig.logging_config import LoggingConfig
-from model.average_player_summarizer import AveragePlayerSummarizer
 from model.home_or_away import HomeOrAway
 from model.utility import Utility
 
 logger = LoggingConfig.get_logger(__name__)
 
-class Predictor:
+class PredictLinearRegression:
     
     @staticmethod
-    def predict(
-        model_file_name: str,
-        date: str = None
-    ):
-        summarizer = AveragePlayerSummarizer()
-        client = NHLClient()
-        Predictor.linear_regression(summarizer, model_file_name, client, date)
-
-    @staticmethod
-    def linear_regression(summarizer, model_file_name, client, date):
+    def predict(summarizer, client, model_file_name, date, date_range):
         data = []
         results_table = [["Game", "Predicted", "Actual"]]
-        
         with open(model_file_name, "rb") as file:
             model = load(file)
-        
-        schedule = Predictor.get_todays_games(client, date)
-        if (int(schedule["numberOfGames"]) <= 0):
-            logger.warning("No games on the schedule for chosen date.")
+
+        if date is not None:
+            games, number_of_games = (
+                PredictLinearRegression.get_games_for_date(client, date)
+            )
+        elif date_range is not None:
+            games, number_of_games = (
+                PredictLinearRegression.get_games_for_date_range(client, date_range)
+            )
+        else:
+            logger.error("No valid date option supplied")
+            return
+
+        if (number_of_games <= 0):
+            logger.warning("No games on the schedule for chosen date(s).")
             return
         
-        for game in schedule["games"]:
+        for game in games:
             logger.info(f"Processing game. ID: '{game["id"]}'.")
             box_score = client.game_center.boxscore(game["id"])
             data.append(DataBuilder.process_game(game, box_score, summarizer))
@@ -54,16 +53,21 @@ class Predictor:
             return
         
         for i in range(len(data_pred)):
-            home_team = schedule["games"][i]["homeTeam"]["commonName"]["default"]
-            away_team = schedule["games"][i]["awayTeam"]["commonName"]["default"]
+            home_team = games[i]["homeTeam"]["commonName"]["default"]
+            away_team = games[i]["awayTeam"]["commonName"]["default"]
             teams = f"{home_team} vs. {away_team}"
             prediction = HomeOrAway(np.rint(data_pred[i]).astype(int)).name
             actual = HomeOrAway(int(actuals[i])).name
             results_table.append([teams, prediction, actual])
             
         Utility.print_table(results_table)
+    
+    @staticmethod
+    def get_games_for_date_range(client, date_range):
+        pass
         
     @staticmethod
-    def get_todays_games(client, date):
+    def get_games_for_date(client, date):
         date = parser.parse(date)
-        return client.schedule.daily_schedule(str(date)[:10])
+        schedule = client.schedule.daily_schedule(str(date)[:10])
+        return schedule["games"], schedule["numberOfGames"]

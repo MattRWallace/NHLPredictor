@@ -4,10 +4,10 @@ import pandas as pd
 from nhlpy import NHLClient
 
 from loggingconfig.logging_config import LoggingConfig
+from model.average_player_summarizer import AveragePlayerSummarizer
 from model.game_entry import GameEntry
 from model.game_type import GameType
-from model.average_player_summarizer import AveragePlayerSummarizer
-from model.seasons import PastSeasons, CurrentSeason
+from model.seasons import CurrentSeason, PastSeasons
 from model.team_map import TeamMap
 
 logger = LoggingConfig.get_logger(__name__)
@@ -45,7 +45,11 @@ class DataBuilder:
                     
                 except Exception as e:
                     print("\033[31mException occured. Check logs.\033[0m")
-                    logger.exception(f"Exception processing team_season_schedule query. Exception: '{str(e)}', games: '{json.dumps(games, indent=4)}', box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True)
+                    logger.exception(
+                        f"Exception processing team_season_schedule query. "
+                        f"Games: '{json.dumps(games, indent=4)}',"
+                        f"Exception: '{str(e)}'.",
+                        stack_info=True)
                 
             logger.info("Building DataFrame from game entries.")
             df = pd.DataFrame(data, columns=summarizer.get_headers())
@@ -72,7 +76,11 @@ class DataBuilder:
                 
             except Exception as e:
                 print("\033[31mException occured. Check logs.\033[0m")
-                logger.exception(f"Exception processing team_season_schedule query. Exception: '{str(e)}', games: '{json.dumps(games, indent=4)}', box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True)
+                logger.exception(
+                    f"Exception processing team_season_schedule query. "
+                    f"Games: '{json.dumps(games, indent=4)}', "
+                    f"Exception: '{str(e)}'.",
+                    stack_info=True)
             
         logger.info("Building DataFrame from game entries.")
         df = pd.DataFrame(data, columns=summarizer.get_headers())

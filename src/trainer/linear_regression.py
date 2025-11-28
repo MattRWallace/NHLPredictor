@@ -1,19 +1,19 @@
-import pandas as pd
 from pickle import dump
+
+import pandas as pd
 import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
 
-from model.seasons import PastSeasons
 
-class Trainer:
+class TrainLinearRegression:
 
-    def train():
+    @staticmethod
+    def train(output, data_files):
         # Dump all lines when printing pandas data. TODO: Delete this.
         # pd.set_option("display.max_rows", None, "display.max_columns", None)
 
-        files = [x for x in map("{0}.csv".format, PastSeasons)]
-        train = pd.concat(map(pd.read_csv, files), ignore_index=True)
+        train = pd.concat(map(pd.read_csv, data_files), ignore_index=True)
         targetsColumnName = train.columns[len(train.columns)-1]
         train_targets = train[targetsColumnName].to_list()
         train.drop(targetsColumnName, axis=1, inplace=True)
@@ -27,6 +27,8 @@ class Trainer:
 
         # Fit
         model.fit(train, train_targets)
+
+        # TODO: Clean up the presentation of stats here.
 
         # r-squared
         train_pred = model.predict(train)
@@ -54,6 +56,8 @@ class Trainer:
         # Coefficients
         print("Coef: ", model.coef_)
         print("Intercept: ", model.intercept_)
-        
-        with open("AveragePlayersModel.pkl", "wb") as file:
+
+        if output is None:
+            output = "LinearRegressionModel.pkl"
+        with open(output, "wb") as file:
             dump(model, file, protocol=5)

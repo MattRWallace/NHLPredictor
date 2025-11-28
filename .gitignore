@@ -1,7 +1,9 @@
 # Ignore venv
-/venv/
-*.log
-__pycache__/
-*.csv
 /dist/
+/venv/
 /NHLStats.egg-info/
+__pycache__/
+*.log
+*.csv
+*.pkl
+*.pickle
