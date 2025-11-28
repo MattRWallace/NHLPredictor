@@ -48,7 +48,7 @@ class DataBuilder:
                     logger.exception(f"Exception processing team_season_schedule query. Exception: '{str(e)}', games: '{json.dumps(games, indent=4)}', box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True)
                 
             logger.info("Building DataFrame from game entries.")
-            df = pd.DataFrame(data, columns=GameEntry.get_headers())
+            df = pd.DataFrame(data, columns=summarizer.get_headers())
             df.to_csv(f"{season}.csv", index=False)
             logger.info(f"DataFrame written to CSV. File: '{season}.csv'.")
                                 
@@ -75,7 +75,7 @@ class DataBuilder:
                 logger.exception(f"Exception processing team_season_schedule query. Exception: '{str(e)}', games: '{json.dumps(games, indent=4)}', box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True)
             
         logger.info("Building DataFrame from game entries.")
-        df = pd.DataFrame(data, columns=GameEntry.get_headers())
+        df = pd.DataFrame(data, columns=summarizer.get_headers())
         df.to_csv("currentSeason.csv", index=False)
         logger.info("DataFrame written to CSV. File: 'currentSeason.csv'.")
         logger.info("Current season data build complete.")

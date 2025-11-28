@@ -1,19 +1,14 @@
-from datetime import datetime, UTC, timedelta
 import dateutil.parser as parser
 import numpy as np
 import pandas as pd
 
 from nhlpy import NHLClient
 from pickle import load
-import statsmodels.api as sm
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score, mean_squared_error
 
 from databuilder.data_builder import DataBuilder
 from loggingconfig.logging_config import LoggingConfig
 from model.average_player_summarizer import AveragePlayerSummarizer
 from model.home_or_away import HomeOrAway
-from model.seasons import PastSeasons
 from model.utility import Utility
 
 logger = LoggingConfig.get_logger(__name__)
@@ -65,8 +60,6 @@ class Predictor:
             prediction = HomeOrAway(np.rint(data_pred[i]).astype(int)).name
             actual = HomeOrAway(int(actuals[i])).name
             results_table.append([teams, prediction, actual])
-            
-            
             
         Utility.print_table(results_table)
         
