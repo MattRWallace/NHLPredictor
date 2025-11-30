@@ -1,4 +1,4 @@
-from loggingconfig.logging_config import LoggingConfig
+from shared.logging_config import LoggingConfig
 from model.home_or_away import HomeOrAway
 from model.team_map import TeamMap
 

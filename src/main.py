@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Optional
 
 import typer
@@ -8,9 +9,31 @@ from model.algorithms import Algorithms
 from model.seasons import PastSeasons
 from model.summarizers import Summarizers
 from predictor.predictor import Predictor
+from shared.execution_context import ExecutionContext
 from trainer.trainer import Trainer
 
 app = typer.Typer()
+
+_summarizer = Annotated[Summarizers, typer.Option(
+        help="Specify the algorithm to use to summarize roster strength."
+    )]
+
+_algorithm = Annotated[Algorithms, typer.Option(
+        help="Specify which ML algorithm to use.",
+        case_sensitive=False,
+        prompt=True
+    )]
+
+_app_root = Annotated[Path, typer.Option(
+    help=(
+        "Specify the location to save related files. Default location is "
+        "'~/.config/nhlpredictor'"
+    )
+)]
+
+_update = Annotated[bool, typer.Option(
+    help="Allow overwriting of existing files. By default, the app will not overwite."
+)]
 
 @app.command()
 def build(
@@ -20,9 +43,7 @@ def build(
             "this option will be ignored."
         )
     )] = None,
-    summarizer: Annotated[Summarizers, typer.Option(
-        help="Specify the algorithm to use to summarize roster strength."
-    )] = None,
+    summarizer: _summarizer = None,
     all_seasons: Annotated[bool, typer.Option(
         help=(
             "Indicates that all seasons should be included in the data set. "
@@ -30,28 +51,24 @@ def build(
             "for list of seasons included."
         )
     )] = False,
-    update: Annotated[bool, typer.Option(
-        help="Allow overwriting of existing file."
-    )] = False
+    update: _update = False
 ):
     """
     Build the data set.
     """
-    Builder.build(season, summarizer, all_seasons, update)
+    ExecutionContext.allow_update = update
+    Builder.build(season, summarizer, all_seasons)
 
 @app.command()
 def train(
-    algorithm: Annotated[Algorithms, typer.Option(
-        help="Specify which ML algorithm to use.",
-        case_sensitive=False,
-        prompt=True
-    )],
+    algorithm: _algorithm,
     data_file: Annotated[Optional[List[str]], typer.Option(
         help="Specify one or more data files which make up the data set to train on."
     )],
     output: Annotated[str, typer.Option(
         help="Specify the file name for the serialized model."
-    )]
+    )],
+    update: _update = False
 ):
     """
     Train a model using the specified ML algorithm and data.
@@ -60,11 +77,7 @@ def train(
 
 @app.command()
 def predict(
-    algorithm: Annotated[Algorithms, typer.Option(
-        help="Specify which ML algorithm to use.",
-        case_sensitive=False,
-        prompt=True
-    )],
+    algorithm: _algorithm,
     model: Annotated[str, typer.Option(
         help="Specify a pickle file containing the pre-trained model to use.",
         prompt=True
@@ -87,9 +100,7 @@ def predict(
             #TODO: Remove the not implemented disclaimer when appropriate
         )
     )] = None,
-    summarizer: Annotated[Summarizers, typer.Option(
-        help="Specify the algorithm to use to summarize roster strength."
-    )] = None,
+    summarizer: _summarizer = None,
     use_season_totals: Annotated[bool, typer.Option(
         help=(
             "Specify to use only the current season stats for prediction. By default the "

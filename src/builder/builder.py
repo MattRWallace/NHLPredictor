@@ -3,7 +3,8 @@ import json
 import pandas as pd
 from nhlpy import NHLClient
 
-from loggingconfig.logging_config import LoggingConfig
+from shared.execution_context import ExecutionContext
+from shared.logging_config import LoggingConfig
 from model.average_player_summarizer import AveragePlayerSummarizer
 from model.game_entry import GameEntry
 from model.game_type import GameType
@@ -19,29 +20,25 @@ class Builder:
     def build(
         seasons,
         summarizer_type,
-        all_seasons: bool = False,
-        update: bool = False
+        all_seasons: bool = False
     ):
         summarizer = Summarizers.get_summarizer(summarizer_type)
-        client = NHLClient()
 
         if all_seasons:
-            Builder.build_past_seasons(summarizer, client, update)
-            Builder.build_current_season(summarizer, client, update)
+            Builder.build_past_seasons(summarizer)
+            Builder.build_current_season(summarizer)
         elif seasons is not None:
-            Builder.build_seasons(seasons, summarizer, client, update)
+            Builder.build_seasons(seasons, summarizer)
         else:
             logger.error("Invalid season specification, cannot build data set.")
 
-        Builder.build_seasons(seasons, summarizer, client, update)
+        Builder.build_seasons(seasons, summarizer)
         logger.info("Call to build_games is complete.")
 
     @staticmethod
     def build_seasons(
         seasons: PastSeasons,
-        summarizer,
-        client,
-        update
+        summarizer
     ):
         logger.info("Start building seasons.")
         
@@ -58,10 +55,10 @@ class Builder:
                 try:
                     logger.info(f"Start processing for team '{team}' in season '{season.value}'.")
                     
-                    games = client.schedule.team_season_schedule(team, season.value)["games"]
+                    games = ExecutionContext.client.schedule.team_season_schedule(team, season.value)["games"]
                     logger.info(f"Found '{len(games)}' games for team '{team}' in season '{season.value}'.")
                     
-                    Builder.process_team(games, games_processed, client, data, summarizer)
+                    Builder.process_team(games, games_processed, data, summarizer)
                     
                 except Exception as e:
                     print("\033[31mException occured. Check logs.\033[0m")
@@ -79,13 +76,13 @@ class Builder:
         logger.info("Completed building previous seasons.")
 
     @staticmethod
-    def build_past_seasons(summarizer, client, update):
+    def build_past_seasons(summarizer):
         logger.info("Start building past seasons.")
-        Builder.build_seasons(PastSeasons.items(), summarizer, client, update)
+        Builder.build_seasons(PastSeasons.items(), summarizer)
         logger.info("Completed building previous seasons.")
     
     @staticmethod
-    def build_current_season(summarizer, client, update):
+    def build_current_season(summarizer):
         # TODO: We should short-circuit and skip trying to prcess future games already in the system.
         # Avoid multiple rows for a single game by recoding the IDs for games already processed.
         games_processed = []
@@ -95,10 +92,10 @@ class Builder:
             try:
                 logger.info(f"Start processing for team '{team}' in season '{CurrentSeason}'.")
                 
-                games = client.schedule.team_season_schedule(team, CurrentSeason)["games"]
+                games = ExecutionContext.client.schedule.team_season_schedule(team, CurrentSeason)["games"]
                 logger.info(f"Found '{len(games)}' games for team '{team}' in season '{CurrentSeason}'.")
                 
-                Builder.process_team(games, games_processed, client, data, summarizer)
+                Builder.process_team(games, games_processed, data, summarizer)
                 
             except Exception as e:
                 print("\033[31mException occured. Check logs.\033[0m")
@@ -115,7 +112,7 @@ class Builder:
         logger.info("Current season data build complete.")
     
     @staticmethod
-    def process_team(games, games_processed, client, data, summarizer):
+    def process_team(games, games_processed, data, summarizer):
         try:
             for game in games:
                 try:
@@ -123,7 +120,7 @@ class Builder:
                         logger.info(f"Skipping game '{game["id"]}' which was already processed.")
                         continue
                     games_processed.append(game["id"])
-                    box_score = client.game_center.boxscore(game["id"])
+                    box_score = ExecutionContext.client.game_center.boxscore(game["id"])
                     if box_score["gameType"] != GameType.RegularSeason.value:
                         logger.info(f"Skipping game '{game["id"]}' which is not a regular season game.")
                         continue
@@ -157,14 +154,13 @@ class Builder:
         return repr(entry).split(',')
 
     @staticmethod
-    def process_game_historical(client, box_score, summarizer, use_season_totals):
+    def process_game_historical(box_score, summarizer, use_season_totals):
         logger.info("Summarizing rosters with historical data.")
         if "playerByGameStats" not in box_score:
             logger.warning("Roster not published yet")
             return None
 
         summary = summarizer.summarize_historical(
-            client,
             box_score["playerByGameStats"]["homeTeam"],
             box_score["playerByGameStats"]["awayTeam"],
             use_season_totals

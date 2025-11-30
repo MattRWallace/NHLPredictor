@@ -3,7 +3,8 @@ import sys
 
 from nhlpy import NHLClient
 
-from loggingconfig.logging_config import LoggingConfig
+from shared.execution_context import ExecutionContext
+from shared.logging_config import LoggingConfig
 from model.player_info import GoalieInfo, SkaterInfo
 
 logger = LoggingConfig.get_logger(__name__)
@@ -17,35 +18,44 @@ class AveragePlayerSummarizer:
 
         return homeSummary, awaySummary
 
-    def summarize_historical(self, client, homeRoster, awayRoster, use_season_totals):
+    def summarize_historical(self, homeRoster, awayRoster, use_season_totals):
         logger.info("Summarizing home and away rosters.")
         homeSummary = self.summarize_roster(
-            AveragePlayerSummarizer.historical_transform(client, homeRoster, use_season_totals)
+            AveragePlayerSummarizer.historical_transform(homeRoster, use_season_totals)
             )
         awaySummary = self.summarize_roster(
-            AveragePlayerSummarizer.historical_transform(client, awayRoster, use_season_totals)
+            AveragePlayerSummarizer.historical_transform(awayRoster, use_season_totals)
             )
 
         return homeSummary, awaySummary
 
-    def historical_transform(client, roster, use_season_totals):
+    def historical_transform(roster, use_season_totals):
         # TODO: Actually implement this
         logger.info("Summarizing home and away rosters with historical data.")
         
         for player in roster["forwards"]:
-            AveragePlayerSummarizer.get_historical_stats_for_player(client, player["playerId"], use_season_totals)
+            AveragePlayerSummarizer.get_historical_stats_for_player(
+                player["playerId"],
+                use_season_totals
+            )
         for player in roster["defense"]:
-            AveragePlayerSummarizer.get_historical_stats_for_player(client, player["playerId"], use_season_totals)
+            AveragePlayerSummarizer.get_historical_stats_for_player(
+                player["playerId"],
+                use_season_totals
+            )
         for player in roster["goalies"]:
-            AveragePlayerSummarizer.get_historical_stats_for_player(client, player["playerId"], use_season_totals)
-        
+            AveragePlayerSummarizer.get_historical_stats_for_player(
+                player["playerId"],
+                use_season_totals
+            )
         
         print(json.dumps(roster, indent=4))
         return roster
     
-    def get_historical_stats_for_player(client, player_id, use_season_totals):
+    def get_historical_stats_for_player(player_id, use_season_totals):
+        player_id = 8478402  #TODO: Remove
         key = "seasonTotals" if use_season_totals else "careerTotals"
-        stats = client.stats.player_career_stats(player_id)
+        stats = ExecutionContext.client.stats.player_career_stats(player_id)
         stats = stats[key]["regularSeason"] # TODO: Do season stats have the exact same format?
         total_games = stats["gamesPlayed"]
         # TODO: Need to ensure that historical data has parity with statistical factors

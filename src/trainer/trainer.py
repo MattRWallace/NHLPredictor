@@ -1,6 +1,6 @@
 from typing import List
 
-from loggingconfig.logging_config import LoggingConfig
+from shared.logging_config import LoggingConfig
 from model.algorithms import Algorithms
 from trainer.linear_regression import TrainLinearRegression
 

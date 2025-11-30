@@ -1,7 +1,7 @@
 from daterangeparser import parse as drp
 from nhlpy.nhl_client import NHLClient
 
-from loggingconfig.logging_config import LoggingConfig
+from shared.logging_config import LoggingConfig
 from model.algorithms import Algorithms
 from model.average_player_summarizer import AveragePlayerSummarizer
 from model.summarizers import Summarizers
@@ -21,7 +21,6 @@ class Predictor:
         use_season_totals: bool = False
     ):
         summarizer = Summarizers.get_summarizer(summarizer_type)
-        client = NHLClient()
         if date_range is not None:
             date_range_start, date_range_end = drp(date_range)
 
@@ -29,7 +28,6 @@ class Predictor:
             case Algorithms.linear_regression:
                 PredictLinearRegression.predict(
                     summarizer,
-                    client,
                     model_file_name,
                     date,
                     date_range_start,

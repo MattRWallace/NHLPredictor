@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from loggingconfig.logging_config import LoggingConfig
-from model.utility import Utility
+from shared.logging_config import LoggingConfig
+from shared.utility import Utility
 
 logger = LoggingConfig.get_logger(__name__)
 
