@@ -1,5 +1,6 @@
-from nhlpy import NHLClient
 import typer
+from nhlpy import NHLClient
+
 
 class ExecutionContext:
     _app_name = "nhlpredictor"
@@ -12,7 +13,7 @@ class ExecutionContext:
 
     @property
     def client(self):
-        if self._client is None:
+        if getattr(self, '_client', None) is None:
             self._client = NHLClient()
         return self._client
 

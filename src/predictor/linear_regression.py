@@ -12,6 +12,7 @@ from shared.logging_config import LoggingConfig
 from shared.utility import Utility
 
 logger = LoggingConfig.get_logger(__name__)
+execution_context = ExecutionContext()
 
 class PredictLinearRegression:
 
@@ -48,10 +49,18 @@ class PredictLinearRegression:
 
         for game in games:
             logger.info(f"Processing game. ID: '{game["id"]}'.")
-            box_score = ExecutionContext.client.game_center.boxscore(game["id"])
+            box_score = execution_context.client.game_center.boxscore(game["id"])
             entry = Builder.process_game_historical(box_score, summarizer, use_season_totals)
             if entry is not None:
                 data.append(entry)
+
+        if (len(data)) == 0:
+            logger.warning("None of the specified games have released rosters yet.")
+            # TODO: Probably need something here for usability.  Maybe print out
+            # a message, an empty results table or even update logging to send
+            # warnings to the console?
+            print("None of the specified games have released rosters yet.")
+            return
 
         df = pd.DataFrame(data)
         df.columns = summarizer.get_headers()
@@ -90,5 +99,5 @@ class PredictLinearRegression:
 
     @staticmethod
     def get_games_for_date(date):
-        schedule = ExecutionContext.client.schedule.daily_schedule(str(date)[:10])
+        schedule = execution_context.client.schedule.daily_schedule(str(date)[:10])
         return schedule["games"], schedule["numberOfGames"]

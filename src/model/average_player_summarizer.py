@@ -3,11 +3,12 @@ import sys
 
 from nhlpy import NHLClient
 
+from model.player_info import GoalieInfo, SkaterInfo
 from shared.execution_context import ExecutionContext
 from shared.logging_config import LoggingConfig
-from model.player_info import GoalieInfo, SkaterInfo
 
 logger = LoggingConfig.get_logger(__name__)
+execution_context = ExecutionContext()
 
 class AveragePlayerSummarizer:
 
@@ -55,7 +56,7 @@ class AveragePlayerSummarizer:
     def get_historical_stats_for_player(player_id, use_season_totals):
         player_id = 8478402  #TODO: Remove
         key = "seasonTotals" if use_season_totals else "careerTotals"
-        stats = ExecutionContext.client.stats.player_career_stats(player_id)
+        stats = execution_context.client.stats.player_career_stats(player_id)
         stats = stats[key]["regularSeason"] # TODO: Do season stats have the exact same format?
         total_games = stats["gamesPlayed"]
         # TODO: Need to ensure that historical data has parity with statistical factors

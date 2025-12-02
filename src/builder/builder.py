@@ -3,16 +3,17 @@ import json
 import pandas as pd
 from nhlpy import NHLClient
 
-from shared.execution_context import ExecutionContext
-from shared.logging_config import LoggingConfig
 from model.average_player_summarizer import AveragePlayerSummarizer
 from model.game_entry import GameEntry
 from model.game_type import GameType
 from model.seasons import CurrentSeason, PastSeasons
 from model.summarizers import Summarizers
 from model.team_map import TeamMap
+from shared.execution_context import ExecutionContext
+from shared.logging_config import LoggingConfig
 
 logger = LoggingConfig.get_logger(__name__)
+execution_context = ExecutionContext()
 
 class Builder:
     
@@ -55,7 +56,7 @@ class Builder:
                 try:
                     logger.info(f"Start processing for team '{team}' in season '{season.value}'.")
                     
-                    games = ExecutionContext.client.schedule.team_season_schedule(team, season.value)["games"]
+                    games = execution_context.client.schedule.team_season_schedule(team, season.value)["games"]
                     logger.info(f"Found '{len(games)}' games for team '{team}' in season '{season.value}'.")
                     
                     Builder.process_team(games, games_processed, data, summarizer)
@@ -92,7 +93,7 @@ class Builder:
             try:
                 logger.info(f"Start processing for team '{team}' in season '{CurrentSeason}'.")
                 
-                games = ExecutionContext.client.schedule.team_season_schedule(team, CurrentSeason)["games"]
+                games = execution_context.client.schedule.team_season_schedule(team, CurrentSeason)["games"]
                 logger.info(f"Found '{len(games)}' games for team '{team}' in season '{CurrentSeason}'.")
                 
                 Builder.process_team(games, games_processed, data, summarizer)
@@ -120,7 +121,7 @@ class Builder:
                         logger.info(f"Skipping game '{game["id"]}' which was already processed.")
                         continue
                     games_processed.append(game["id"])
-                    box_score = ExecutionContext.client.game_center.boxscore(game["id"])
+                    box_score = execution_context.client.game_center.boxscore(game["id"])
                     if box_score["gameType"] != GameType.RegularSeason.value:
                         logger.info(f"Skipping game '{game["id"]}' which is not a regular season game.")
                         continue
@@ -163,7 +164,7 @@ class Builder:
         summary = summarizer.summarize_historical(
             box_score["playerByGameStats"]["homeTeam"],
             box_score["playerByGameStats"]["awayTeam"],
-            use_season_totals
+            use_season_totals # TODO: Check on this
         )
         logger.info("Rosters summarized.")
 

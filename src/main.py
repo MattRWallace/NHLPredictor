@@ -56,7 +56,8 @@ def build(
     """
     Build the data set.
     """
-    ExecutionContext.allow_update = update
+    context = ExecutionContext()
+    context.allow_update = update
     Builder.build(season, summarizer, all_seasons)
 
 @app.command()
