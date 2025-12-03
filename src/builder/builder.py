@@ -1,22 +1,20 @@
 import json
+from typing import List
 
 import pandas as pd
-from sqlitedict import SqliteDict
 
-from model.game_entry import GameEntry
+import shared.execution_context
+from model.game_state import GameState, GameStatesForDataset
 from model.game_type import GameType, SupportedGameTypes
 from model.seasons import CurrentSeason, PastSeasons
 from model.team_map import TeamMap
 from shared.constants.database import Database as DB
 from shared.constants.json import JSON as Keys
-from shared.execution_context import ExecutionContext
 from shared.logging_config import LoggingConfig
 from shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
-execution_context = ExecutionContext()
-summarizer = execution_context.summarizer
-
+execution_context = shared.execution_context.ExecutionContext()
 
 class Builder:
     
@@ -25,177 +23,95 @@ class Builder:
         seasons,
         all_seasons: bool = False
     ):
-        if(execution_context.experimental):
-            if all_seasons:
-                Builder.build_past_seasons()
-                Builder.build_current_season()
-            elif seasons is not None:
-                Builder.build_seasons_db(seasons)
-            else:
-                logger.error("Invalid season specification, cannot build data set.")
-            return
-
+        # TODO: With the new design, does it makes sense to expose season
+        # selection to the end user? Should we just always do all games?
         if all_seasons:
-            Builder.build_past_seasons()
+            Builder.build_seasons()
             Builder.build_current_season()
         elif seasons is not None:
             Builder.build_seasons(seasons)
         else:
             logger.error("Invalid season specification, cannot build data set.")
-
-        Builder.build_seasons(seasons)
         logger.info("Call to build_games is complete.")
-
+    
     @staticmethod
-    def build_seasons_db(
-        seasons: PastSeasons,
-    ):
-        logger.info("Start building seasons.")
-        
-        players_db = SqliteDict(
-            utl.get_db_name(),
-            tablename=DB.players_table_name,
-            autocommit=True)
-        skater_stats_db = SqliteDict(
-            utl.get_db_name(),
-            tablename=DB.skater_stats_table_name,
-            autocommit=True
-        )
-        goalie_stats_db = SqliteDict(
-            utl.get_db_name(),
-            DB.goalie_stats_table_name,
-            autocommit=True
-        )
-        games_db = SqliteDict(
-            utl.get_db_name(),
-            DB.games_table_name,
-            autocommit=True
-        )
-        data = {
-            DB.players_table_name: players_db,
-            DB.skater_stats_table_name: skater_stats_db,
-            DB.goalie_stats_table_name: goalie_stats_db,
-            DB.games_table_name: games_db
-        }
-        
-        for season in seasons:
-            logger.info(f"Start of processing for season '{season.value}'.")
-
-            # TODO: If not update and file exists, then continue
-            
-            for team in TeamMap:
-                try:
-                    logger.info(f"Start processing for team '{team}' in season '{season.value}'.")
-                    
-                    games_raw = execution_context.client.schedule.team_season_schedule(team, season.value)[Keys.games]
-                    logger.info(f"Found '{len(games_raw)}' games for team '{team}' in season '{season.value}'.")
-
-                    Builder.process_team_db(games_raw, data)
-                    
-                except Exception as e:
-                    print("\033[31mException occured. Check logs.\033[0m")
-                    logger.exception(
-                        f"Exception processing team_season_schedule query. "
-                        f"Games: '{json.dumps(games_db, indent=4)}',"
-                        f"Exception: '{str(e)}'.",
-                        stack_info=True)
-            
-            
-            logger.info("Building DataFrame from game entries.")
-            # df = pd.DataFrame(data, columns=summarizer.get_headers())
-            # df.to_csv(f"{season.value}.csv", index=False)
-            logger.info(f"DataFrame written to CSV. File: '{season.value}.csv'.")
-                                
-        logger.info("Completed building previous seasons.")
+    def report():
+        pass
 
     @staticmethod
     def build_seasons(
-        seasons: PastSeasons
+        seasons: List[str] = [x.value for  x in PastSeasons.items()],
     ):
         logger.info("Start building seasons.")
+
+        # TODO: What are the implications of the design change on the 'update'
+        # parameter? Are there changes to how we connect to the DB?
+        data = utl.get_db_connections(
+            DB.players_table_name,
+            DB.skater_stats_table_name,
+            DB.goalie_stats_table_name,
+            DB.games_table_name
+        )
         
-        # Avoid multiple rows for a single game by recoding the IDs for games already processed.
-        games_processed = []
-
         for season in seasons:
-            logger.info(f"Start of processing for season '{season.value}'.")
+            logger.info(f"Start of processing for season '{season}'.")
 
-            # TODO: If not update and file exists, then continue
-            
-            data = []
             for team in TeamMap:
+                logger.info(f"Start processing for team '{team}' in season '{season}'.")
                 try:
-                    logger.info(f"Start processing for team '{team}' in season '{season.value}'.")
-                    
-                    games = execution_context.client.schedule.team_season_schedule(team, season.value)["games"]
-                    logger.info(f"Found '{len(games)}' games for team '{team}' in season '{season.value}'.")
-                    
-                    Builder.process_team(games, games_processed, data)
-                    
+                    games_raw = execution_context.client.schedule.team_season_schedule(team, season)[Keys.games]
+                    logger.info(f"Found '{len(games_raw)}' games for team '{team}' in season '{season}'.")
+                    Builder.process_team_games(games_raw, data)
+                    logger.info(f"Completed processing games for team. Team:'{team}'.")
                 except Exception as e:
                     print("\033[31mException occured. Check logs.\033[0m")
                     logger.exception(
                         f"Exception processing team_season_schedule query. "
-                        f"Games: '{json.dumps(games, indent=4)}',"
+                        f"Games: '{json.dumps(games_raw, indent=4)}',"
                         f"Exception: '{str(e)}'.",
                         stack_info=True)
-                
-            logger.info("Building DataFrame from game entries.")
-            df = pd.DataFrame(data, columns=summarizer.get_headers())
-            df.to_csv(f"{season.value}.csv", index=False)
-            logger.info(f"DataFrame written to CSV. File: '{season.value}.csv'.")
-                                
-        logger.info("Completed building previous seasons.")
+
+        # TODO: Factor this out into a method
+        skaters_db = data[DB.skater_stats_table_name]
+        goalies_db = data[DB.goalie_stats_table_name]
+        player_ids = set()
+        for record in skaters_db:
+            player_ids.add(skaters_db[record][Keys.player_id])
+        for record in goalies_db:
+            player_ids.add(goalies_db[record][Keys.player_id])
+        
+        Builder.process_players(player_ids, data)
 
     @staticmethod
-    def build_past_seasons():
-        logger.info("Start building past seasons.")
-        Builder.build_seasons(PastSeasons.items(), summarizer)
-        logger.info("Completed building previous seasons.")
-    
-    @staticmethod
     def build_current_season():
-        # TODO: We should short-circuit and skip trying to prcess future games already in the system.
-        # Avoid multiple rows for a single game by recoding the IDs for games already processed.
-        games_processed = []
-        data = []
-        
-        for team in TeamMap:
-            try:
-                logger.info(f"Start processing for team '{team}' in season '{CurrentSeason}'.")
-                
-                games = execution_context.client.schedule.team_season_schedule(team, CurrentSeason)["games"]
-                logger.info(f"Found '{len(games)}' games for team '{team}' in season '{CurrentSeason}'.")
-                
-                Builder.process_team(games, games_processed, data)
-                
-            except Exception as e:
-                print("\033[31mException occured. Check logs.\033[0m")
-                logger.exception(
-                    f"Exception processing team_season_schedule query. "
-                    f"Games: '{json.dumps(games, indent=4)}', "
-                    f"Exception: '{str(e)}'.",
-                    stack_info=True)
-            
-        logger.info("Building DataFrame from game entries.")
-        df = pd.DataFrame(data, columns=summarizer.get_headers())
-        df.to_csv("currentSeason.csv", index=False)
-        logger.info("DataFrame written to CSV. File: 'currentSeason.csv'.")
-        logger.info("Current season data build complete.")
+        Builder.build_seasons([CurrentSeason])
     
     @staticmethod
-    def process_team_db(games_raw, data):
+    def process_team_games(games_raw, data):
         games_db = data[DB.games_table_name]
 
         try:
             for game in games_raw:
                 try:
                     if game[Keys.id] in games_db:
-                        logger.info(f"Skipping game '{game[Keys.id]}' which was already processed.")
+                        logger.info(
+                            f"Skipping game '{game[Keys.id]}' which was already "
+                            "processed."
+                        )
                         continue
-                    if GameType(game[Keys.game_type]) not in SupportedGameTypes:
-                        logger.info(f"Skipping game '{game[Keys.id]}' which is not a supported game type. Type: '{game[Keys.game_type]}'.")
+                    if (GameType(utl.json_value_or_default(game, Keys.game_type, default=GameType.Preseason))
+                        not in SupportedGameTypes):
+                        logger.info(
+                            f"Skipping game '{game[Keys.id]}' which is not a "
+                            f"supported game type. Type: '{game[Keys.game_type]}'."
+                        )
                         continue
+                    if (GameState(utl.json_value_or_default(game, Keys.game_state, default=GameState.Future))
+                        not in GameStatesForDataset):
+                        logger.info(
+                            f"Skipping game '{game[Keys.id]}' which is not a "
+                            f"supported game state. State: '{game[Keys.game_state]}'."
+                        )
 
                     # game ID is the primary key for the games DB
                     games_db[game[Keys.id]] = {
@@ -203,45 +119,35 @@ class Builder:
                         Keys.game_type: game[Keys.game_type],
                         Keys.game_state: game[Keys.game_state]
                     }
-
-                    box_score = execution_context.client.game_center.boxscore(game[Keys.id])
-
-                    Builder.process_box_score_db(box_score, data)
-
                 except Exception as e:
                     print("\033[31mException occured. Check logs.\033[0m")
-                    logger.exception(f"Exception processing box_score query. Exception: '{str(e)}', box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True)
+                    logger.exception(
+                        f"Exception adding game data to database. Exception: "
+                        f"'{str(e)}'.",
+                        stack_info=True
+                    )
 
-        except Exception as e:
-            print("\033[31mException occured. Check logs.\033[0m")
-            logger.exception(f"Exception processing team_season_schedule query. Exception: '{str(e)}', games: '{json.dumps(games_raw, indent=4)}', box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True)
-
-    @staticmethod
-    def process_team(games, games_processed, data):
-        try:
-            for game in games:
                 try:
-                    if game["id"] in games_processed:
-                        logger.info(f"Skipping game '{game["id"]}' which was already processed.")
-                        continue
-                    games_processed.append(game["id"])
-                    box_score = execution_context.client.game_center.boxscore(game["id"])
-                    if box_score["gameType"] != GameType.RegularSeason.value:
-                        logger.info(f"Skipping game '{game["id"]}' which is not a regular season game.")
-                        continue
-                    
-                    data.append(Builder.process_game(box_score))
-
+                    box_score = execution_context.client.game_center.boxscore(game[Keys.id])
+                    Builder.process_box_score(box_score, data)
                 except Exception as e:
                     print("\033[31mException occured. Check logs.\033[0m")
-                    logger.exception(f"Exception processing box_score query. Exception: '{str(e)}', box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True)
+                    logger.exception(
+                        f"Exception processing box_score query. Exception: "
+                        f"'{str(e)}', box_score: '{json.dumps(box_score, indent=4)}'.",
+                        stack_info=True
+                    )
 
         except Exception as e:
             print("\033[31mException occured. Check logs.\033[0m")
-            logger.exception(f"Exception processing team_season_schedule query. Exception: '{str(e)}', games: '{json.dumps(games, indent=4)}', box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True)
+            logger.exception(
+                f"Exception processing team_season_schedule query. Exception: "
+                f"'{str(e)}', games: '{json.dumps(games_raw, indent=4)}', "
+                f"box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True
+            )
 
     @staticmethod
-    def process_box_score_db(box_score, data):
+    def process_box_score(box_score, data):
         logger.info("Processing players.")
         
         if Keys.player_by_game_stats not in box_score:
@@ -251,15 +157,29 @@ class Builder:
         home_team = utl.json_value_or_default(box_score, Keys.player_by_game_stats, Keys.home_team)
         away_team = utl.json_value_or_default(box_score, Keys.player_by_game_stats, Keys.away_team)
 
-        Builder.process_skaters_db(home_team[Keys.forwards] + home_team[Keys.defense], data, utl.json_value_or_default(box_score, Keys.id))
-        Builder.process_goalies_db(home_team[Keys.goalies], data, utl.json_value_or_default(box_score, Keys.id))
-        Builder.process_skaters_db(away_team[Keys.forwards] + away_team[Keys.defense], data, utl.json_value_or_default(box_score, Keys.id))
-        Builder.process_goalies_db(away_team[Keys.goalies], data, utl.json_value_or_default(box_score, Keys.id))
+        Builder.process_skaters(home_team[Keys.forwards] + home_team[Keys.defense], data, utl.json_value_or_default(box_score, Keys.id))
+        Builder.process_goalies(home_team[Keys.goalies], data, utl.json_value_or_default(box_score, Keys.id))
+        Builder.process_skaters(away_team[Keys.forwards] + away_team[Keys.defense], data, utl.json_value_or_default(box_score, Keys.id))
+        Builder.process_goalies(away_team[Keys.goalies], data, utl.json_value_or_default(box_score, Keys.id))
 
-        logger.info("Players processed.")
+        # TODO: Players will only be updated when there is a game to process
+        # that they participated in. Perhaps this can move up the stack and
+        # get the set of players to process via unique player IDs in the stats
+        # databases?
+        # Builder.process_players(
+        #     home_team[Keys.forwards]
+        #     + home_team[Keys.defense]
+        #     + home_team[Keys.goalies]
+        #     + away_team[Keys.forwards]
+        #     + away_team[Keys.defense]
+        #     + away_team[Keys.goalies],
+        #     data
+        # )
+
+        logger.info("Player stats by game processed.")
 
     @staticmethod
-    def process_skaters_db(skaters, data, game_id):
+    def process_skaters(skaters, data, game_id):
         skater_stats_db = data[DB.skater_stats_table_name]
 
         for skater in skaters:
@@ -283,7 +203,7 @@ class Builder:
             }
 
     @staticmethod
-    def process_goalies_db(goalies, data, game_id):
+    def process_goalies(goalies, data, game_id):
         goalie_stats_db = data[DB.goalie_stats_table_name]
 
         for goalie in goalies:
@@ -306,41 +226,75 @@ class Builder:
                 Keys.shots_against: utl.json_value_or_default(goalie, Keys.shots_against),
                 Keys.saves: utl.json_value_or_default(goalie, Keys.saves)
             }
-
+    
     @staticmethod
-    def process_game(box_score):
-        logger.info("Summarizing rosters.")
-        if "playerByGameStats" not in box_score:
-            logger.warning("Roster not published yet")
-            return None
-        summary = summarizer.summarize(
-            box_score["playerByGameStats"]["homeTeam"],
-            box_score["playerByGameStats"]["awayTeam"]
-        )
-        logger.info("Rosters summarized.")
+    def process_players(players, data):
+        players_db = data[DB.players_table_name]
+
+        for player_id in players:
+            stats = execution_context.client.stats.player_career_stats(player_id)
+            first_name = utl.json_value_or_default(stats, Keys.first_name, Keys.default, default="")
+            last_name = utl.json_value_or_default(stats, Keys.last_name, Keys.default, default="")
+
+            if not utl.json_value_or_default(stats, Keys.is_Active, default=False):
+                logger.info(
+                    f"Skipping inactive player. PlayerId: '{stats[Keys.player_id]}', "
+                    f"Name: '{first_name} {last_name}'."
+                )
+                if player_id in players_db:
+                    logger.info(
+                        f"Deleting inactive player in database. "
+                        f"PlayerId: '{stats[Keys.player_id]}', "
+                        f"Name: '{stats[Keys.first_name]} {stats[Keys.last_name]}'."
+                    )
+                    del players_db[player_id]
+            else:
+                players_db[player_id] = {
+                    Keys.current_team_id: utl.json_value_or_default(stats, Keys.current_team_id),
+                    Keys.first_name: first_name,
+                    Keys.last_name: last_name,
+                    Keys.height_in_cm: utl.json_value_or_default(stats, Keys.height_in_cm),
+                    Keys.weight_in_kg: utl.json_value_or_default(stats, Keys.weight_in_kg)
+                }
+
+
+    # TODO: Keep for reference while updating other modules.
+    # Delete when that is complete.
+
+    # @staticmethod
+    # def process_game(box_score):
+    #     logger.info("Summarizing rosters.")
+    #     if "playerByGameStats" not in box_score:
+    #         logger.warning("Roster not published yet")
+    #         return None
+    #     summary = summarizer.summarize(
+    #         box_score["playerByGameStats"]["homeTeam"],
+    #         box_score["playerByGameStats"]["awayTeam"]
+    #     )
+    #     logger.info("Rosters summarized.")
         
-        entry = GameEntry.from_json(box_score)
-        entry.add_roster(*summary)
+    #     entry = GameEntry.from_json(box_score)
+    #     entry.add_roster(*summary)
         
-        logger.info(f"Adding game entry to data set: '{entry}'.")
-        return repr(entry).split(',')
+    #     logger.info(f"Adding game entry to data set: '{entry}'.")
+    #     return repr(entry).split(',')
 
-    @staticmethod
-    def process_game_historical(box_score, use_season_totals):
-        logger.info("Summarizing rosters with historical data.")
-        if "playerByGameStats" not in box_score:
-            logger.warning("Roster not published yet")
-            return None
+    # @staticmethod
+    # def process_game_historical(box_score, use_season_totals):
+    #     logger.info("Summarizing rosters with historical data.")
+    #     if "playerByGameStats" not in box_score:
+    #         logger.warning("Roster not published yet")
+    #         return None
 
-        summary = summarizer.summarize_historical(
-            box_score["playerByGameStats"]["homeTeam"],
-            box_score["playerByGameStats"]["awayTeam"],
-            use_season_totals # TODO: Check on this
-        )
-        logger.info("Rosters summarized.")
+    #     summary = summarizer.summarize_historical(
+    #         box_score["playerByGameStats"]["homeTeam"],
+    #         box_score["playerByGameStats"]["awayTeam"],
+    #         use_season_totals # TODO: Check on this
+    #     )
+    #     logger.info("Rosters summarized.")
 
-        entry = GameEntry.from_json(box_score)
-        entry.add_roster(*summary)
+    #     entry = GameEntry.from_json(box_score)
+    #     entry.add_roster(*summary)
 
-        logger.info(f"Adding game entry to data set: '{entry}'.")
-        return repr(entry).split(',')
+    #     logger.info(f"Adding game entry to data set: '{entry}'.")
+    #     return repr(entry).split(',')

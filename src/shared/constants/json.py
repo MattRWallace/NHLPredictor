@@ -1,4 +1,5 @@
 class JSON:
+    default = "default"
 
     """
     Game related keys.
@@ -53,3 +54,9 @@ class JSON:
     """
     player_id = "playerId"
     game_id = "gameId"
+    is_Active = "isActive"
+    first_name = "firstName"
+    last_name = "lastName"
+    current_team_id = "currentTeamId"
+    height_in_cm = "heightInCentimeters"
+    weight_in_kg = "weightInKilograms"

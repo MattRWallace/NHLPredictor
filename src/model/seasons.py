@@ -17,4 +17,4 @@ class PastSeasons(str, Enum):
     def items(cls):
         return [e for e in cls]
 
-CurrentSeason = 20252026
+CurrentSeason = "20252026"

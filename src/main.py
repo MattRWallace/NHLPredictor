@@ -41,7 +41,6 @@ def build(
             "this option will be ignored."
         )
     )] = None,
-    summarizer: _summarizer = None,
     all_seasons: Annotated[bool, typer.Option(
         help=(
             "Indicates that all seasons should be included in the data set. "
@@ -50,6 +49,12 @@ def build(
         )
     )] = False,
     update: _update = False,
+    report: Annotated[bool, typer.Option(
+        help=(
+            "Reports on the current status of the database.  No alteration of "
+            "of data will occur."
+        )
+    )] = False,
     experimental: Annotated[bool, typer.Option()] = False
 ):
     """
@@ -58,10 +63,12 @@ def build(
     context = ExecutionContext()
     context.allow_update = update
     context.experimental = experimental
-    context.summarizer = summarizer
 
     from builder.builder import Builder
-    Builder.build(season, all_seasons)
+    if report:
+        Builder.report()
+    else:
+        Builder.build(season, all_seasons)
 
 @app.command()
 def train(

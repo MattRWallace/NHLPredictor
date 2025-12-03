@@ -4,7 +4,6 @@ import typer
 from nhlpy import NHLClient
 from sqlitedict import SqliteDict
 
-import model.summarizers
 from shared.utility import Utility
 
 
@@ -24,12 +23,12 @@ class ExecutionContext:
         return self._client
     
     @property
-    def summarizer(self):
+    def summarizer_type(self):
         return self._summarizer
 
-    @summarizer.setter
-    def summarizer(self, value):
-        self._summarizer = model.summarizers.Summarizers.get_summarizer(value)
+    @summarizer_type.setter
+    def summarizer_type(self, value):
+        self._summarizer = value
 
     @property
     def database(self):

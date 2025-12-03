@@ -1,3 +1,6 @@
+from sqlitedict import SqliteDict
+
+
 class Utility:
     """
     Check the json_data for a value associated with the provided key.  If no
@@ -74,3 +77,15 @@ class Utility:
         parts = [int(part) for part in parts]
 
         return tuple(parts)
+
+    @staticmethod
+    def get_db_connections(*names):
+        DBs = {}
+
+        for name in names:
+            DBs[name] = SqliteDict(
+                Utility.get_db_name(),
+                tablename=name,
+                autocommit=True
+            )
+        return DBs

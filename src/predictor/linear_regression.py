@@ -47,12 +47,13 @@ class PredictLinearRegression:
             logger.warning("No games on the schedule for chosen date(s).")
             return
 
-        for game in games:
-            logger.info(f"Processing game. ID: '{game["id"]}'.")
-            box_score = execution_context.client.game_center.boxscore(game["id"])
-            entry = Builder.process_game_historical(box_score, summarizer, use_season_totals)
-            if entry is not None:
-                data.append(entry)
+        # TODO: No referencing back to the builder
+        # for game in games:
+        #     logger.info(f"Processing game. ID: '{game["id"]}'.")
+        #     box_score = execution_context.client.game_center.boxscore(game["id"])
+        #     entry = Builder.process_game_historical(box_score, summarizer, use_season_totals)
+        #     if entry is not None:
+        #         data.append(entry)
 
         if (len(data)) == 0:
             logger.warning("None of the specified games have released rosters yet.")
