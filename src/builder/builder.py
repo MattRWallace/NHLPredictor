@@ -52,10 +52,25 @@ class Builder:
     ):
         logger.info("Start building seasons.")
         
-        players_db = {}
-        skater_stats_db = {}
-        goalie_stats_db = {}
-        games_db = {}
+        players_db = SqliteDict(
+            utl.get_db_name(),
+            tablename=DB.players_table_name,
+            autocommit=True)
+        skater_stats_db = SqliteDict(
+            utl.get_db_name(),
+            tablename=DB.skater_stats_table_name,
+            autocommit=True
+        )
+        goalie_stats_db = SqliteDict(
+            utl.get_db_name(),
+            DB.goalie_stats_table_name,
+            autocommit=True
+        )
+        games_db = SqliteDict(
+            utl.get_db_name(),
+            DB.games_table_name,
+            autocommit=True
+        )
         data = {
             DB.players_table_name: players_db,
             DB.skater_stats_table_name: skater_stats_db,
