@@ -79,13 +79,27 @@ class Utility:
         return tuple(parts)
 
     @staticmethod
-    def get_db_connections(*names):
+    def get_db_connections(
+        *names,
+        update_db: bool = False,
+        read_only: bool = False
+    ):
         DBs = {}
+        if update_db:
+            # Empty the database on open
+            flag = "w"
+        else:
+            # Open for read/write without modification
+            flag = "c"
+        if read_only:
+            # Process readonly flag last as we want it to take precedence.
+            flag = "r"
 
         for name in names:
             DBs[name] = SqliteDict(
                 Utility.get_db_name(),
                 tablename=name,
-                autocommit=True
+                autocommit=True,
+                flag=flag
             )
         return DBs

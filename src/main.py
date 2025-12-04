@@ -5,7 +5,7 @@ import typer
 from typing_extensions import Annotated
 
 from model.algorithms import Algorithms
-from model.seasons import PastSeasons
+from model.seasons import Seasons
 from model.summarizers import Summarizers
 from shared.execution_context import ExecutionContext
 
@@ -29,13 +29,9 @@ _app_root = Annotated[Path, typer.Option(
     )
 )]
 
-_update = Annotated[bool, typer.Option(
-    help="Allow overwriting of existing files. By default, the app will not overwite."
-)]
-
 @app.command()
 def build(
-    season: Annotated[Optional[List[PastSeasons]], typer.Option(
+    season: Annotated[Optional[List[Seasons]], typer.Option(
         help=(
             "Specify the seasons to include. If '--all-seasons' is specified, "
             "this option will be ignored."
@@ -48,7 +44,11 @@ def build(
             "for list of seasons included."
         )
     )] = False,
-    update: _update = False,
+    update: Annotated[bool, typer.Option(
+        help=(
+            "Existing tables will be cleared and repopulated."
+        )
+)] = False,
     report: Annotated[bool, typer.Option(
         help=(
             "Reports on the current status of the database.  No alteration of "
@@ -79,7 +79,11 @@ def train(
     output: Annotated[str, typer.Option(
         help="Specify the file name for the serialized model."
     )],
-    update: _update = False
+    update: Annotated[bool, typer.Option(
+        help=(
+            "Allow serialized model to be overwritten."
+        )
+    )]
 ):
     """
     Train a model using the specified ML algorithm and data.

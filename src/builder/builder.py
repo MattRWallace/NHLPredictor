@@ -1,12 +1,12 @@
 import json
 from typing import List
 
-import pandas as pd
+from sqlitedict import SqliteDict
 
 import shared.execution_context
 from model.game_state import GameState, GameStatesForDataset
 from model.game_type import GameType, SupportedGameTypes
-from model.seasons import CurrentSeason, PastSeasons
+from model.seasons import Seasons
 from model.team_map import TeamMap
 from shared.constants.database import Database as DB
 from shared.constants.json import JSON as Keys
@@ -23,11 +23,8 @@ class Builder:
         seasons,
         all_seasons: bool = False
     ):
-        # TODO: With the new design, does it makes sense to expose season
-        # selection to the end user? Should we just always do all games?
         if all_seasons:
             Builder.build_seasons()
-            Builder.build_current_season()
         elif seasons is not None:
             Builder.build_seasons(seasons)
         else:
@@ -36,21 +33,34 @@ class Builder:
     
     @staticmethod
     def report():
-        pass
+        logger.info("Start dataset report.")
+        # data = utl.get_db_connections(
+        #     DB.players_table_name,
+        #     DB.skater_stats_table_name,
+        #     DB.goalie_stats_table_name,
+        #     DB.games_table_name,
+        #     read_only=True
+        # )
+        db = SqliteDict(utl.get_db_name)
+        print(db.get_tablenames)
+
+        # Summarize the games table
+        summary_table = [["Games"]]
+
+        utl.print_table(summary_table)
+
 
     @staticmethod
     def build_seasons(
-        seasons: List[str] = [x.value for  x in PastSeasons.items()],
+        seasons: List[str] = [x.value for  x in Seasons.items()],
     ):
         logger.info("Start building seasons.")
-
-        # TODO: What are the implications of the design change on the 'update'
-        # parameter? Are there changes to how we connect to the DB?
         data = utl.get_db_connections(
             DB.players_table_name,
             DB.skater_stats_table_name,
             DB.goalie_stats_table_name,
-            DB.games_table_name
+            DB.games_table_name,
+            update_db=execution_context.allow_update
         )
         
         for season in seasons:
@@ -82,10 +92,6 @@ class Builder:
         
         Builder.process_players(player_ids, data)
 
-    @staticmethod
-    def build_current_season():
-        Builder.build_seasons([CurrentSeason])
-    
     @staticmethod
     def process_team_games(games_raw, data):
         games_db = data[DB.games_table_name]
