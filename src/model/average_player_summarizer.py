@@ -13,6 +13,9 @@ execution_context = shared.execution_context.ExecutionContext()
 
 class AveragePlayerSummarizer:
 
+    def get_file_name():
+        return "AverageSummarizer"
+
     def summarize(self, homeRoster, awayRoster):
         logger.info("Summarizing home and away rosters.")
         homeSummary = self.summarize_roster(homeRoster)

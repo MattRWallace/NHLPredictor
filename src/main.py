@@ -74,9 +74,6 @@ def build(
 @app.command()
 def train(
     algorithm: _algorithm,
-    data_file: Annotated[Optional[List[str]], typer.Option(
-        help="Specify one or more data files which make up the data set to train on."
-    )],
     output: Annotated[str, typer.Option(
         help="Specify the file name for the serialized model."
     )],
@@ -93,9 +90,11 @@ def train(
     context = ExecutionContext()
     if app_dir:
         context.app_dir = app_dir
+    context.output_file = output
+    context.allow_update = update
     
     from trainer.trainer import Trainer
-    Trainer.train(algorithm, output, data_file)
+    Trainer.train(algorithm)
 
 @app.command()
 def predict(

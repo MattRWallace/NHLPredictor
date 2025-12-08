@@ -47,7 +47,8 @@ class Utility:
                 table[y][x] = [c.ljust, c.rjust, c.center][align[x]](widths[x])
 
         # --- data for printing
-        P = " "*pad; LSEP,SEP,RSEP = "│"+P, P+"│"+P, P+"│"
+        P = " "*pad
+        LSEP,SEP,RSEP = "│"+P, P+"│"+P, P+"│"
         lines = ["─"*(widths[col]+pad*2) for col in range(numCols)]
 
         drawLine = [isGrid]*numRows

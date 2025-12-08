@@ -3,9 +3,6 @@ from pathlib import Path
 
 import typer
 from nhlpy import NHLClient
-from sqlitedict import SqliteDict
-
-from shared.utility import Utility
 
 
 class ExecutionContext:

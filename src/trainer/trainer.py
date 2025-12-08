@@ -1,7 +1,5 @@
-from typing import List
-
-from shared.logging_config import LoggingConfig
 from model.algorithms import Algorithms
+from shared.logging_config import LoggingConfig
 from trainer.linear_regression import TrainLinearRegression
 
 logger = LoggingConfig.get_logger(__name__)
@@ -9,13 +7,9 @@ logger = LoggingConfig.get_logger(__name__)
 class Trainer:
 
     @staticmethod
-    def train(
-        algorithm: Algorithms,
-        output: str,
-        data_files: List[str]
-    ):
+    def train(algorithm: Algorithms):
         match algorithm:
             case Algorithms.linear_regression:
-                TrainLinearRegression.train(output, data_files)
+                TrainLinearRegression.train_db()
             case _:
                 logger.error("Invalid algorithm provided to predict.")
