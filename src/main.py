@@ -48,7 +48,7 @@ def build(
         help=(
             "Existing tables will be cleared and repopulated."
         )
-)] = False,
+    )] = False,
     report: Annotated[bool, typer.Option(
         help=(
             "Reports on the current status of the database.  No alteration of "
@@ -81,7 +81,7 @@ def train(
         help=(
             "Allow serialized model to be overwritten."
         )
-    )],
+    )] = False,
     app_dir: _app_dir = None
 ):
     """

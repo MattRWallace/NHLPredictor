@@ -1,12 +1,33 @@
 from pickle import dump
 
 import pandas as pd
-import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
+import statsmodels.api as sm
 
+from shared.constants.database import Database as DB
+from shared.execution_context import ExecutionContext
+from shared.logging_config import LoggingConfig
+from shared.utility import Utility as utl
+
+logger = LoggingConfig.get_logger(__name__)
+execution_context = ExecutionContext()
 
 class TrainLinearRegression:
+    
+    @staticmethod
+    def train_db():
+        logger.info("Start of model training.")
+        
+        data = utl.get_pandas_connections(
+            DB.players_table_name,
+            DB.skater_stats_table_name,
+            DB.goalie_stats_table_name,
+            DB.meta_table_name,
+            path=execution_context.app_dir
+        )
+        
+        logger.info("End of model training.")
 
     @staticmethod
     def train(output, data_files):

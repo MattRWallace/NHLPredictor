@@ -36,7 +36,7 @@ class Builder:
     def report():
         logger.info("Start dataset report.")
         execution_context.ensure_app_dir()
-        data = utl.get_db_connections(
+        data = utl.get_sqlitedict_connections(
             DB.players_table_name,
             DB.skater_stats_table_name,
             DB.goalie_stats_table_name,
@@ -106,7 +106,7 @@ class Builder:
     ):
         logger.info("Start building seasons.")
         execution_context.ensure_app_dir()
-        data = utl.get_db_connections(
+        data = utl.get_sqlitedict_connections(
             DB.players_table_name,
             DB.skater_stats_table_name,
             DB.goalie_stats_table_name,
