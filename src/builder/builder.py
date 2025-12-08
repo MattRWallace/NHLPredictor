@@ -147,13 +147,8 @@ class Builder:
 
         try:
             for game in games_raw:
+                logger.info(f"Processing game: '{game}'.")
                 try:
-                    # if game[Keys.id] in games_db:
-                    #     logger.info(
-                    #         f"Skipping game '{game[Keys.id]}' which was already "
-                    #         "processed."
-                    #     )
-                    #     continue
                     if (GameType(utl.json_value_or_default(game, Keys.game_type, default=GameType.Preseason))
                         not in SupportedGameTypes):
                         logger.info(
@@ -207,7 +202,7 @@ class Builder:
 
     @staticmethod
     def process_box_score(box_score, data):
-        logger.info("Processing box_score.")
+        logger.info("Processing box_score. BoxScore: '{box_score}'.")
         
         if Keys.player_by_game_stats not in box_score:
             logger.warning("Roster not published yet")
@@ -230,6 +225,7 @@ class Builder:
         meta_db = data[DB.meta_table_name]
 
         for skater in skaters:
+            logger.info(f"Processing skater. Skater:'{skater}'.")
             skater_stats_db[len(skater_stats_db)+1] = {
                 Keys.game_id: game_id,
                 Keys.player_id: utl.json_value_or_default(skater, Keys.player_id),
@@ -261,6 +257,7 @@ class Builder:
         meta_db = data[DB.meta_table_name]
 
         for goalie in goalies:
+            logger.info(f"Processing goalie. Goalie:'{goalie}'.")
             goalie_stats_db[len(goalie_stats_db)+1] = {
                 Keys.game_id: game_id,
                 Keys.player_id: utl.json_value_or_default(goalie, Keys.player_id),
@@ -308,6 +305,7 @@ class Builder:
             logger.error("Unable to get JSON response content from players query.")
         else:
             for player in players_json:
+                logger.info(f"Processing player: Player: '{player}'.")
                 player_id = utl.json_value_or_default(player, Keys.player_id, default=None)
                 stats = execution_context.client.stats.player_career_stats(player_id)
                 first_name = utl.json_value_or_default(stats, Keys.first_name, Keys.default, default="")
