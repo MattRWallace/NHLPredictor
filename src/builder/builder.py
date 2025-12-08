@@ -35,12 +35,14 @@ class Builder:
     @staticmethod
     def report():
         logger.info("Start dataset report.")
+        execution_context.ensure_app_dir()
         data = utl.get_db_connections(
             DB.players_table_name,
             DB.skater_stats_table_name,
             DB.goalie_stats_table_name,
             DB.games_table_name,
             DB.meta_table_name,
+            path=execution_context.app_dir,
             read_only=True
         )
         games_db = data[DB.games_table_name]
@@ -103,12 +105,14 @@ class Builder:
         seasons: List[str] = [x.value for  x in Seasons.items()],
     ):
         logger.info("Start building seasons.")
+        execution_context.ensure_app_dir()
         data = utl.get_db_connections(
             DB.players_table_name,
             DB.skater_stats_table_name,
             DB.goalie_stats_table_name,
             DB.games_table_name,
             DB.meta_table_name,
+            path=execution_context.app_dir,
             update_db=execution_context.allow_update
         )
         

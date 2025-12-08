@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from sqlitedict import SqliteDict
 
 
@@ -62,8 +65,8 @@ class Utility:
         print("└"+"┴".join(lines)+"┘")
 
     @staticmethod
-    def get_db_name():
-        return "NHLPredictor.sqlite"
+    def get_db_path(path: Path):
+        return os.path.join(path, "NHLPredictor.sqlite")
     
     """
     Some goalies stats are represented as a save/try pair.  For example, see
@@ -80,6 +83,7 @@ class Utility:
     @staticmethod
     def get_db_connections(
         *names,
+        path: Path,
         update_db: bool = False,
         read_only: bool = False
     ):
@@ -96,7 +100,7 @@ class Utility:
 
         for name in names:
             DBs[name] = SqliteDict(
-                Utility.get_db_name(),
+                Utility.get_db_path(path),
                 tablename=name,
                 autocommit=True,
                 flag=flag

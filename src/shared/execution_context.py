@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import typer
@@ -31,12 +32,6 @@ class ExecutionContext:
         self._summarizer = value
 
     @property
-    def database(self):
-        if getattr(self, '_database', None) is None:
-            self._database = SqliteDict(Utility.get_db_name())
-        return self._database
-    
-    @property
     def is_playoffs(self):
         return self._is_playoffs
 
@@ -54,14 +49,25 @@ class ExecutionContext:
 
     @property
     def app_dir(self) -> Path:
-        if self._app_dir is None:
-            typer.get_app_dir(ExecutionContext._app_name)
+        if not getattr(self, "_app_dir", None):
+            self.app_dir = typer.get_app_dir(ExecutionContext._app_name)
         return self._app_dir
 
     @app_dir.setter
     def app_dir(self, value: Path):
+        # TODO: shouldn't use general exceptions
         if ExecutionContext._app_dir_set:
-            # TODO: shouldn't use general excdeption
             raise Exception("File path already set.")
+        value = os.path.expanduser(value)
+        if not os.path.isabs(value):
+            value = os.path.abspath(value)
+        if not os.path.isabs(value):
+            raise RuntimeError("Error: could not resolve path.")
+        if not os.path.exists(value):
+            Path(value).mkdir()
+
         self._app_dir = value
         ExecutionContext._app_dir_set = True
+    
+    def ensure_app_dir(self):
+        self.app_dir
