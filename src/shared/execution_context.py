@@ -50,6 +50,14 @@ class ExecutionContext:
             self.app_dir = typer.get_app_dir(ExecutionContext._app_name)
         return self._app_dir
 
+    @property   
+    def output_file(self):
+        return self._output_file
+    
+    @output_file.setter
+    def output_file(self, value: str):
+        self._output_file = value
+
     @app_dir.setter
     def app_dir(self, value: Path):
         # TODO: shouldn't use general exceptions

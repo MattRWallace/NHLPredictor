@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 from typing import List
 
+import requests
 from ansimarkup import ansiprint as print
 
 import shared.execution_context
@@ -24,19 +25,32 @@ class Builder:
         seasons,
         all_seasons: bool = False
     ):
+        logger.info("Call to build starting.")
+        execution_context.ensure_app_dir()
+        data = utl.get_sqlitedict_tables(
+            DB.players_table_name,
+            DB.skater_stats_table_name,
+            DB.goalie_stats_table_name,
+            DB.games_table_name,
+            DB.meta_table_name,
+            path=execution_context.app_dir,
+            update_db=execution_context.allow_update
+        )
+        
         if all_seasons:
-            Builder.build_seasons()
+            Builder.build_stats_by_season(data)
         elif seasons is not None:
-            Builder.build_seasons(seasons)
+            Builder.build_stats_by_season(data, seasons)
         else:
             logger.error("Invalid season specification, cannot build data set.")
-        logger.info("Call to build_games is complete.")
+        Builder.populate_players(data)
+        logger.info("Call to build is complete.")
     
     @staticmethod
     def report():
         logger.info("Start dataset report.")
         execution_context.ensure_app_dir()
-        data = utl.get_sqlitedict_connections(
+        data = utl.get_sqlitedict_tables(
             DB.players_table_name,
             DB.skater_stats_table_name,
             DB.goalie_stats_table_name,
@@ -100,22 +114,14 @@ class Builder:
         print(f"<magenta>Note: Current time UTC is: {datetime.now(timezone.utc)}</magenta>")
         print("\n")
 
+        logger.info("Finished dataset report.")
+
     @staticmethod
-    def build_seasons(
+    def build_stats_by_season(
+        data,
         seasons: List[str] = [x.value for  x in Seasons.items()],
     ):
         logger.info("Start building seasons.")
-        execution_context.ensure_app_dir()
-        data = utl.get_sqlitedict_connections(
-            DB.players_table_name,
-            DB.skater_stats_table_name,
-            DB.goalie_stats_table_name,
-            DB.games_table_name,
-            DB.meta_table_name,
-            path=execution_context.app_dir,
-            update_db=execution_context.allow_update
-        )
-        
         for season in seasons:
             logger.info(f"Start of processing for season '{season}'.")
             for team in TeamMap:
@@ -123,8 +129,7 @@ class Builder:
                 try:
                     games_raw = execution_context.client.schedule.team_season_schedule(team, season)[Keys.games]
                     logger.info(f"Found '{len(games_raw)}' games for team '{team}' in season '{season}'.")
-                    Builder.process_team_games(games_raw, data)
-                    logger.info(f"Completed processing games for team. Team:'{team}'.")
+                    Builder.process_raw_games(games_raw, data)
                 except Exception as e:
                     print("\033[31mException occured. Check logs.\033[0m")
                     logger.exception(
@@ -132,23 +137,23 @@ class Builder:
                         f"Games: '{json.dumps(games_raw, indent=4)}',"
                         f"Exception: '{str(e)}'.",
                         stack_info=True)
-
-        Builder.process_players(Builder.get_all_playerids(data), data)
+        logger.info("Finished building seasons.")
     
     @staticmethod
-    def process_team_games(games_raw, data):
+    def process_raw_games(games_raw, data):
+        logger.info("Start processing game.")
         games_db = data[DB.games_table_name]
         meta_db = data[DB.meta_table_name]
 
         try:
             for game in games_raw:
                 try:
-                    if game[Keys.id] in games_db:
-                        logger.info(
-                            f"Skipping game '{game[Keys.id]}' which was already "
-                            "processed."
-                        )
-                        continue
+                    # if game[Keys.id] in games_db:
+                    #     logger.info(
+                    #         f"Skipping game '{game[Keys.id]}' which was already "
+                    #         "processed."
+                    #     )
+                    #     continue
                     if (GameType(utl.json_value_or_default(game, Keys.game_type, default=GameType.Preseason))
                         not in SupportedGameTypes):
                         logger.info(
@@ -162,6 +167,7 @@ class Builder:
                             f"Skipping game '{game[Keys.id]}' which is not a "
                             f"supported game state. State: '{game[Keys.game_state]}'."
                         )
+                        continue
                     # game ID is the primary key for the games DB
                     games_db[game[Keys.id]] = {
                         Keys.season: game[Keys.season],
@@ -197,10 +203,11 @@ class Builder:
                 f"'{str(e)}', games: '{json.dumps(games_raw, indent=4)}', "
                 f"box_score: '{json.dumps(box_score, indent=4)}'.", stack_info=True
             )
+        logger.info("Finished processing game.")
 
     @staticmethod
     def process_box_score(box_score, data):
-        logger.info("Processing players.")
+        logger.info("Processing box_score.")
         
         if Keys.player_by_game_stats not in box_score:
             logger.warning("Roster not published yet")
@@ -214,10 +221,11 @@ class Builder:
         Builder.process_skaters(away_team[Keys.forwards] + away_team[Keys.defense], data, utl.json_value_or_default(box_score, Keys.id))
         Builder.process_goalies(away_team[Keys.goalies], data, utl.json_value_or_default(box_score, Keys.id))
 
-        logger.info("Player stats by game processed.")
+        logger.info("Box score processed.")
 
     @staticmethod
     def process_skaters(skaters, data, game_id):
+        logger.info("Started adding skaters to database.")
         skater_stats_db = data[DB.skater_stats_table_name]
         meta_db = data[DB.meta_table_name]
 
@@ -244,9 +252,11 @@ class Builder:
         meta_db[DB.skater_stats_table_name] = {
             Keys.last_update: datetime.now(timezone.utc)
         }
+        logger.info("Finished adding skaters to database.")
 
     @staticmethod
     def process_goalies(goalies, data, game_id):
+        logger.info("Started adding goalies to database.")
         goalie_stats_db = data[DB.goalie_stats_table_name]
         meta_db = data[DB.meta_table_name]
 
@@ -274,40 +284,34 @@ class Builder:
         meta_db[DB.goalie_stats_table_name] = {
             Keys.last_update: datetime.now(timezone.utc)
         }
-    
-    @staticmethod
-    def get_all_playerids(data):
-        skaters_db = data[DB.skater_stats_table_name]
-        goalies_db = data[DB.goalie_stats_table_name]
-        player_ids = set()
-        for record in skaters_db:
-            player_ids.add(skaters_db[record][Keys.player_id])
-        for record in goalies_db:
-            player_ids.add(goalies_db[record][Keys.player_id])
-        return player_ids
+        logger.info("Finished adding goalies to database.")
 
     @staticmethod
-    def process_players(players, data):
+    def populate_players(data):
+        logger.info("Started adding players to database.")
         players_db = data[DB.players_table_name]
         meta_db = data[DB.meta_table_name]
+        
+        # I don't find this endpoint in the nhlpy APIs. Making a manual request
+        # to get all active players.
+        url = "https://search.d3.nhle.com/api/v1/search/player"
+        params = dict(
+            culture="en-us",
+            limit="50000",
+            q="*",
+            active="true"
+        )
+        resp = requests.get(url=url, params=params)
+        players_json = resp.json()
 
-        for player_id in players:
-            stats = execution_context.client.stats.player_career_stats(player_id)
-            first_name = utl.json_value_or_default(stats, Keys.first_name, Keys.default, default="")
-            last_name = utl.json_value_or_default(stats, Keys.last_name, Keys.default, default="")
-            if not utl.json_value_or_default(stats, Keys.is_Active, default=False):
-                logger.info(
-                    f"Skipping inactive player. PlayerId: '{stats[Keys.player_id]}', "
-                    f"Name: '{first_name} {last_name}'."
-                )
-                if player_id in players_db:
-                    logger.info(
-                        f"Deleting inactive player in database. "
-                        f"PlayerId: '{stats[Keys.player_id]}', "
-                        f"Name: '{stats[Keys.first_name]} {stats[Keys.last_name]}'."
-                    )
-                    del players_db[player_id]
-            else:
+        if not players_json:
+            logger.error("Unable to get JSON response content from players query.")
+        else:
+            for player in players_json:
+                player_id = utl.json_value_or_default(player, Keys.player_id, default=None)
+                stats = execution_context.client.stats.player_career_stats(player_id)
+                first_name = utl.json_value_or_default(stats, Keys.first_name, Keys.default, default="")
+                last_name = utl.json_value_or_default(stats, Keys.last_name, Keys.default, default="")
                 players_db[player_id] = {
                     Keys.current_team_id: utl.json_value_or_default(stats, Keys.current_team_id),
                     Keys.first_name: first_name,
@@ -315,12 +319,13 @@ class Builder:
                     Keys.height_in_cm: utl.json_value_or_default(stats, Keys.height_in_cm),
                     Keys.weight_in_kg: utl.json_value_or_default(stats, Keys.weight_in_kg)
                 }
+                logger.info(f"Added player '{last_name}, {first_name}' to players table.")
 
-        meta_db[DB.players_table_name] = {
-            Keys.last_update: datetime.now(timezone.utc)
-        }
-
-
+            meta_db[DB.players_table_name] = {
+                Keys.last_update: datetime.now(timezone.utc)
+            }
+        logger.info("Finished adding players to database.")
+    
     # TODO: Keep for reference while updating other modules.
     # Delete when that is complete.
 

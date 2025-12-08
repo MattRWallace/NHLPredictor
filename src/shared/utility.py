@@ -1,8 +1,8 @@
 import os
+import sqlite3
 from pathlib import Path
 
 import pandas as pd
-import sqlite3
 from sqlitedict import SqliteDict
 
 
@@ -84,7 +84,7 @@ class Utility:
         return tuple(parts)
 
     @staticmethod
-    def get_sqlitedict_connections(
+    def get_sqlitedict_tables(
         *names,
         path: Path,
         update_db: bool = False,
@@ -110,19 +110,15 @@ class Utility:
             )
         return DBs
     
-    def get_pandas_connections(
+    def get_pandas_tables(
         *names,
         path: Path
     ):
-        DBs = {}
-        connection = sqlite3.connect(Utility.get_db_path(path))
-        cursor = connection.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        print(cursor.fetchall())
-        
-        # for name in names:
-        #     DBs[name] = pd.read_sql_query(
-        #         f"SELECT * FROM {name}",
-        #         connection
-        #     )
+        DBs = Utility.get_sqlitedict_tables(
+            *names,
+            path=path,
+            read_only=True
+        )
+        for name in names:
+            DBs[name] = pd.DataFrame(list(DBs[name].values()), index=list(DBs[name].keys()))
         return DBs
