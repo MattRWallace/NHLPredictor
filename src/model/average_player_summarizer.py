@@ -1,10 +1,11 @@
 import json
 import sys
 
-from nhlpy import NHLClient
+import pandas as pd
 
 import shared.execution_context
 from model.player_info import GoalieInfo, SkaterInfo
+from shared.constants.database import Database as DB
 from shared.constants.json import JSON as Keys
 from shared.logging_config import LoggingConfig
 
@@ -15,18 +16,116 @@ class AveragePlayerSummarizer:
 
     def get_file_name():
         return "AverageSummarizer"
+    
+    def summarize_db(self, data):
+        self.cleanup_data_db(data)
+        skater_summary_by_game, goalie_summary_by_game = self.reduce_data_db(data)
+        game_stats = pd.merge(
+            skater_summary_by_game,
+            goalie_summary_by_game,
+            how='outer',
+            on=Keys.game_id)
+        #TODO game_stats[Keys.winner] = <calculate winner column>
+        
+        return game_stats
+
+    
+    def cleanup_data_db(self, data):
+        skaters_db = data[DB.skater_stats_table_name]
+        goalies_db = data[DB.goalie_stats_table_name]
+
+        # TODO: Fix build-stage bug introducing duplicates then remove this.
+        skaters_db = skaters_db.groupby([Keys.game_id, Keys.player_id]).first()
+        goalies_db = goalies_db.groupby([Keys.game_id, Keys.player_id]).first()
+
+        # Clean up the skaters_db column datatypes
+        skaters_db = skaters_db.astype({
+            Keys.toi: "string",
+        })
+
+        # The shot columns provide us with shots againsts, saves against and goals
+        # against. Since saves + goals = shots, this may be too much information.
+        # There are several columns like this that may be introducing duplicates
+        # when split.
+        # TODO: Need to unpack if these relationships are bad for the model.
+        goalies_db[[Keys.even_strength_saves_against, Keys.even_strength_shots_against]] = goalies_db[Keys.even_strength_shots_against].str.split('/', expand=True)
+        goalies_db[[Keys.power_play_saves_against, Keys.power_play_shots_against]] = goalies_db[Keys.power_play_shots_against].str.split('/', expand=True)
+        goalies_db[[Keys.shorthanded_saves_against, Keys.shorthanded_shots_against]] = goalies_db[Keys.shorthanded_shots_against].str.split('/', expand=True)
+        goalies_db[[Keys.save_saves_against, Keys.save_shots_against]] = goalies_db[Keys.save_shots_against].str.split('/', expand=True)
+
+        # Clean up the goalies_db column datatypes
+        goalies_db = goalies_db.astype({
+            Keys.even_strength_shots_against: int,
+            Keys.power_play_shots_against: int,
+            Keys.shorthanded_shots_against: int,
+            Keys.save_shots_against: int,
+            Keys.toi: "string",
+            Keys.decision: "string",
+            Keys.even_strength_saves_against: int,
+            Keys.power_play_saves_against: int,
+            Keys.shorthanded_saves_against: int,
+            Keys.save_saves_against: int
+        })
+
+        data[DB.skater_stats_table_name] = skaters_db
+        data[DB.goalie_stats_table_name] = goalies_db
+
+
+
+    def reduce_data_db(self, data):
+        # TODO: Need to split players by team before summarizing
+        games_db = data[DB.games_table_name]
+        skaters_db = data[DB.skater_stats_table_name]
+        goalies_db = data[DB.goalie_stats_table_name]
+
+        skaters_grouped = skaters_db.groupby(Keys.game_id)
+        skaters_reduced = pd.DataFrame({
+            Keys.goals: skaters_grouped[Keys.goals].sum(),
+            Keys.assists: skaters_grouped[Keys.assists].sum(),
+            Keys.points: skaters_grouped[Keys.points].sum(),
+            Keys.plus_minus: skaters_grouped[Keys.plus_minus].sum(),
+            # PIM TODO
+            Keys.hits: skaters_grouped[Keys.hits].sum(),
+            Keys.power_play_goals: skaters_grouped[Keys.power_play_goals].sum(),
+            Keys.sog: skaters_grouped[Keys.sog].sum(),
+            # faceoffWinningPctg TODO
+            # TOI TODO
+            Keys.blocked_shots: skaters_grouped[Keys.blocked_shots].sum(),
+            Keys.shifts: skaters_grouped[Keys.shifts].sum(),
+            Keys.giveaways: skaters_grouped[Keys.giveaways].sum(),
+            Keys.takeaways: skaters_grouped[Keys.takeaways].sum()
+        })
+
+        goalies_grouped = goalies_db.groupby(Keys.game_id)
+        goalies_reduced = pd.DataFrame({
+            Keys.even_strength_shots_against: goalies_grouped[Keys.even_strength_shots_against].sum(),
+            Keys.power_play_shots_against: goalies_grouped[Keys.power_play_shots_against].sum(),
+            Keys.shorthanded_shots_against: goalies_grouped[Keys.shorthanded_shots_against].sum(),
+            Keys.save_shots_against: goalies_grouped[Keys.save_shots_against].sum(),
+            #Keys.save_pctg: goalies_grouped.apply(lambda x: (x[Keys.saves]/x[Keys.shots_against])) TODO
+            Keys.even_strength_goals_against: goalies_grouped[Keys.even_strength_goals_against].sum(),
+            Keys.power_play_goals_against: goalies_grouped[Keys.power_play_goals_against].sum(),
+            Keys.shorthanded_goals_against: goalies_grouped[Keys.shorthanded_goals_against].sum(),
+            Keys.pim: goalies_grouped[Keys.pim].sum(),
+            Keys.goals_against: goalies_grouped[Keys.goals_against].sum(),
+            #TOI TODO
+            #starter TODO
+            #decision TODO
+            Keys.shots_against: goalies_grouped[Keys.shots_against].sum(),
+            Keys.saves: goalies_grouped[Keys.saves].sum(),
+            Keys.even_strength_saves_against: goalies_grouped[Keys.even_strength_saves_against].sum(),
+            Keys.power_play_saves_against: goalies_grouped[Keys.power_play_saves_against].sum(),
+            Keys.shorthanded_saves_against: goalies_grouped[Keys.shorthanded_saves_against].sum(),
+            Keys.save_saves_against: goalies_grouped[Keys.save_saves_against].sum(),
+        })
+
+        return skaters_reduced, goalies_reduced
+
 
     def summarize(self, homeRoster, awayRoster):
         logger.info("Summarizing home and away rosters.")
         homeSummary = self.summarize_roster(homeRoster)
         awaySummary = self.summarize_roster(awayRoster)
-
-        return homeSummary, awaySummary
-
-    def summarize_db(self, homeRoster, awayRoster):
-        logger.info("Summarizing home and away rosters.")
-        homeSummary = self.summarize_roster_db(homeRoster)
-        awaySummary = self.summarize_roster_db(awayRoster)
 
         return homeSummary, awaySummary
 
@@ -61,7 +160,6 @@ class AveragePlayerSummarizer:
                 use_season_totals
             )
         
-        print(json.dumps(roster, indent=4))
         return roster
     
     def get_historical_stats_for_player(player_id, use_season_totals):
@@ -88,7 +186,6 @@ class AveragePlayerSummarizer:
             #"giveaways": 1,
             #"takeaways": 0
         }
-        print(json.dumps(result, indent=4))
         sys.exit(0)
 
     def summarize_roster(self, roster):

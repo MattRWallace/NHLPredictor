@@ -5,6 +5,7 @@ import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 
+from model.summarizers import Summarizers
 from shared.constants.database import Database as DB
 from shared.execution_context import ExecutionContext
 from shared.logging_config import LoggingConfig
@@ -23,24 +24,14 @@ class TrainLinearRegression:
             DB.players_table_name,
             DB.skater_stats_table_name,
             DB.goalie_stats_table_name,
+            DB.games_table_name,
             DB.meta_table_name,
             path=execution_context.app_dir
         )
 
-        print(data[DB.players_table_name])
-        duplicated = data[DB.players_table_name].duplicated(subset=['firstName', 'lastName'])
-        for idx, dupe in duplicated.items():
-            if dupe:
-                print(f"Dupe: {data[DB.players_table_name].loc[idx]}")
+        summarizer = Summarizers.get_summarizer(execution_context.summarizer_type)
+        dataset = summarizer.summarize_db(data)
 
-        # data[DB.players_table_name].loc[["Elias"], ["Pettersson"]]
-        # data[DB.players_table_name].loc[["Matt"], ["Murray"]]
-        # data[DB.players_table_name].loc[["Sebastian"], ["Aho"]]
-
-        print(data[DB.players_table_name].query("firstName == 'Elias' and lastName == 'Pettersson'"))
-        print(data[DB.players_table_name].query("firstName == 'Matt' and lastName == 'Murray'"))
-        print(data[DB.players_table_name].query("firstName == 'Sebastian' and lastName == 'Aho'"))
-        
         logger.info("End of model training.")
 
     @staticmethod

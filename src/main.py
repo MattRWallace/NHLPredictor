@@ -77,6 +77,7 @@ def train(
     output: Annotated[str, typer.Option(
         help="Specify the file name for the serialized model."
     )],
+    summarizer_type = _summarizer,
     update: Annotated[bool, typer.Option(
         help=(
             "Allow serialized model to be overwritten."
@@ -92,6 +93,7 @@ def train(
         context.app_dir = app_dir
     context.output_file = output
     context.allow_update = update
+    context.summarizer_type = summarizer_type
     
     from trainer.trainer import Trainer
     Trainer.train(algorithm)
