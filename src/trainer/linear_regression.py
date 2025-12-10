@@ -4,6 +4,7 @@ import pandas as pd
 import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
 
 from model.summarizers import Summarizers
 from shared.constants.database import Database as DB
@@ -30,7 +31,56 @@ class TrainLinearRegression:
         )
 
         summarizer = Summarizers.get_summarizer(execution_context.summarizer_type)
-        dataset = summarizer.summarize_db(data)
+        game_data = summarizer.summarize(data)
+
+        train, test = train_test_split(game_data, test_size=0.2)
+
+        # TODO: This assumes that the last column is our winner column.  The
+        # summarizer needs to either guarantee this or return them separately.
+        targetsColumnName = train.columns[len(train.columns)-1]
+        train_targets = train[targetsColumnName].to_list()
+        train.drop(targetsColumnName, axis=1, inplace=True)
+        targetsColumnName = test.columns[len(test.columns)-1]
+        test_targets = test[targetsColumnName].to_list()
+        test.drop(targetsColumnName, axis=1, inplace=True)
+
+        # create LR model
+        model = LinearRegression()
+
+        # Fit
+        model.fit(train, train_targets)
+
+        # TODO: Clean up the presentation of stats here.
+
+        # r-squared
+        train_pred = model.predict(train)
+        r_squared = r2_score(train_targets, train_pred)
+        print("R-squared: ", r_squared)
+
+        # P-Values
+        x_intercept = sm.add_constant(train)
+        model_sm = sm.OLS(train_targets, x_intercept).fit()
+        print("P-Values: ", model_sm.pvalues)
+        
+        print("Mean squared error: %.2f" % mean_squared_error(train_targets, train_pred))
+
+        test_pred = model.predict(test)
+        r_squared = r2_score(test_targets, test_pred)
+        print("R-squared: ", r_squared)
+
+        # P-Values
+        x_intercept = sm.add_constant(test)
+        model_sm = sm.OLS(test_targets, x_intercept).fit()
+        print("P-Values: ", model_sm.pvalues)
+        
+        print("Mean squared error: %.2f" % mean_squared_error(test_targets, test_pred))
+
+        # Coefficients
+        print("Coef: ", model.coef_)
+        print("Intercept: ", model.intercept_)
+
+        with open("LinearRegressionModel.pkl", "wb") as file:
+            dump(model, file, protocol=5)
 
         logger.info("End of model training.")
 

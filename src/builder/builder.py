@@ -8,6 +8,7 @@ from ansimarkup import ansiprint as print
 import shared.execution_context
 from model.game_state import GameState, GameStatesForDataset
 from model.game_type import GameType, SupportedGameTypes
+from model.home_or_away import HomeOrAway
 from model.seasons import Seasons
 from model.team_map import TeamMap
 from shared.constants.database import Database as DB
@@ -131,7 +132,7 @@ class Builder:
                     logger.info(f"Found '{len(games_raw)}' games for team '{team}' in season '{season}'.")
                     Builder.process_raw_games(games_raw, data)
                 except Exception as e:
-                    print("\033[31mException occured. Check logs.\033[0m")
+                    print("<red>Exception occured. Check logs.</red>")
                     logger.exception(
                         f"Exception processing team_season_schedule query. "
                         f"Games: '{json.dumps(games_raw, indent=4)}',"
@@ -163,11 +164,18 @@ class Builder:
                             f"supported game state. State: '{game[Keys.game_state]}'."
                         )
                         continue
+                    if game[Keys.home_team][Keys.score] > game[Keys.away_team][Keys.score]:
+                        winner = HomeOrAway.HOME.value
+                    else:
+                        winner = HomeOrAway.AWAY.value
                     # game ID is the primary key for the games DB
                     games_db[game[Keys.id]] = {
                         Keys.season: game[Keys.season],
                         Keys.game_type: game[Keys.game_type],
-                        Keys.game_state: game[Keys.game_state]
+                        Keys.game_state: game[Keys.game_state],
+                        Keys.home_team: game[Keys.home_team][Keys.id],
+                        Keys.away_team: game[Keys.away_team][Keys.id],
+                        Keys.winner: winner
                     }
                 except Exception as e:
                     print("\033[31mException occured. Check logs.\033[0m")
@@ -211,15 +219,35 @@ class Builder:
         home_team = utl.json_value_or_default(box_score, Keys.player_by_game_stats, Keys.home_team)
         away_team = utl.json_value_or_default(box_score, Keys.player_by_game_stats, Keys.away_team)
 
-        Builder.process_skaters(home_team[Keys.forwards] + home_team[Keys.defense], data, utl.json_value_or_default(box_score, Keys.id))
-        Builder.process_goalies(home_team[Keys.goalies], data, utl.json_value_or_default(box_score, Keys.id))
-        Builder.process_skaters(away_team[Keys.forwards] + away_team[Keys.defense], data, utl.json_value_or_default(box_score, Keys.id))
-        Builder.process_goalies(away_team[Keys.goalies], data, utl.json_value_or_default(box_score, Keys.id))
+        Builder.process_skaters(
+            home_team[Keys.forwards] + home_team[Keys.defense],
+            data,
+            utl.json_value_or_default(box_score, Keys.id),
+            utl.json_value_or_default(box_score, Keys.home_team, Keys.id)
+        )
+        Builder.process_goalies(
+            home_team[Keys.goalies],
+            data,
+            utl.json_value_or_default(box_score, Keys.id),
+            utl.json_value_or_default(box_score, Keys.home_team, Keys.id)
+        )
+        Builder.process_skaters(
+            away_team[Keys.forwards] + away_team[Keys.defense],
+            data,
+            utl.json_value_or_default(box_score, Keys.id),
+            utl.json_value_or_default(box_score, Keys.away_team, Keys.id)
+        )
+        Builder.process_goalies(
+            away_team[Keys.goalies],
+            data,
+            utl.json_value_or_default(box_score, Keys.id),
+            utl.json_value_or_default(box_score, Keys.away_team, Keys.id)
+        )
 
         logger.info("Box score processed.")
 
     @staticmethod
-    def process_skaters(skaters, data, game_id):
+    def process_skaters(skaters, data, game_id, team_id):
         logger.info("Started adding skaters to database.")
         skater_stats_db = data[DB.skater_stats_table_name]
         meta_db = data[DB.meta_table_name]
@@ -242,7 +270,8 @@ class Builder:
                 Keys.blocked_shots: utl.json_value_or_default(skater, Keys.blocked_shots),
                 Keys.shifts: utl.json_value_or_default(skater, Keys.shifts),
                 Keys.giveaways: utl.json_value_or_default(skater, Keys.giveaways),
-                Keys.takeaways: utl.json_value_or_default(skater, Keys.takeaways)
+                Keys.takeaways: utl.json_value_or_default(skater, Keys.takeaways),
+                Keys.team_id: team_id
             }
 
         meta_db[DB.skater_stats_table_name] = {
@@ -251,7 +280,7 @@ class Builder:
         logger.info("Finished adding skaters to database.")
 
     @staticmethod
-    def process_goalies(goalies, data, game_id):
+    def process_goalies(goalies, data, game_id, team_id):
         logger.info("Started adding goalies to database.")
         goalie_stats_db = data[DB.goalie_stats_table_name]
         meta_db = data[DB.meta_table_name]
@@ -275,7 +304,8 @@ class Builder:
                 Keys.starter: utl.json_value_or_default(goalie, Keys.starter),
                 Keys.decision: utl.json_value_or_default(goalie, Keys.decision),
                 Keys.shots_against: utl.json_value_or_default(goalie, Keys.shots_against),
-                Keys.saves: utl.json_value_or_default(goalie, Keys.saves)
+                Keys.saves: utl.json_value_or_default(goalie, Keys.saves),
+                Keys.team_id: team_id
             }
 
         meta_db[DB.goalie_stats_table_name] = {
@@ -323,44 +353,3 @@ class Builder:
                 Keys.last_update: datetime.now(timezone.utc)
             }
         logger.info("Finished adding players to database.")
-    
-    # TODO: Keep for reference while updating other modules.
-    # Delete when that is complete.
-
-    # @staticmethod
-    # def process_game(box_score):
-    #     logger.info("Summarizing rosters.")
-    #     if "playerByGameStats" not in box_score:
-    #         logger.warning("Roster not published yet")
-    #         return None
-    #     summary = summarizer.summarize(
-    #         box_score["playerByGameStats"]["homeTeam"],
-    #         box_score["playerByGameStats"]["awayTeam"]
-    #     )
-    #     logger.info("Rosters summarized.")
-        
-    #     entry = GameEntry.from_json(box_score)
-    #     entry.add_roster(*summary)
-        
-    #     logger.info(f"Adding game entry to data set: '{entry}'.")
-    #     return repr(entry).split(',')
-
-    # @staticmethod
-    # def process_game_historical(box_score, use_season_totals):
-    #     logger.info("Summarizing rosters with historical data.")
-    #     if "playerByGameStats" not in box_score:
-    #         logger.warning("Roster not published yet")
-    #         return None
-
-    #     summary = summarizer.summarize_historical(
-    #         box_score["playerByGameStats"]["homeTeam"],
-    #         box_score["playerByGameStats"]["awayTeam"],
-    #         use_season_totals # TODO: Check on this
-    #     )
-    #     logger.info("Rosters summarized.")
-
-    #     entry = GameEntry.from_json(box_score)
-    #     entry.add_roster(*summary)
-
-    #     logger.info(f"Adding game entry to data set: '{entry}'.")
-    #     return repr(entry).split(',')

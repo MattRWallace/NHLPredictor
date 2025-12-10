@@ -4,4 +4,6 @@ from enum import Enum
 Designate a team as Home or Away
 """
 class HomeOrAway(Enum):
-    NONE, HOME, AWAY = range(3)
+    AWAY = -1
+    NONE = 0
+    HOME = 1

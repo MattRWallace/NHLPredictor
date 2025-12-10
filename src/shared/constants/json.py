@@ -66,4 +66,14 @@ class JSON:
     height_in_cm = "heightInCentimeters"
     weight_in_kg = "weightInKilograms"
 
+    """
+    Custom keys. 
+    
+    These are typically key names for the DB that don't exist in
+    the API JSON response formats.
+    """
     winner = "winner"
+    home_team = "homeTeam"
+    away_team= "awayTeam"
+    score = "score"
+    team_id = "teamId"
