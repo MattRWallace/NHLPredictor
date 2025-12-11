@@ -105,6 +105,10 @@ class AveragePlayerSummarizer:
 
         skaters_reduced = skaters_reduced.reset_index()
         goalies_reduced = goalies_reduced.reset_index()
+        
+        # TODO: We're still managing to mingle home and away stats. Need
+        # to segregate those.
+        # Thought: Utilize Utility.json... to take a prefix??
 
         games_db = data[DB.games_table_name]
         games_db.index.name = Keys.game_id # TODO: We should fix this on the build side
