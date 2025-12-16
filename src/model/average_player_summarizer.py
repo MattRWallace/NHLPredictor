@@ -119,6 +119,10 @@ class AveragePlayerSummarizer:
         # TODO: Prefix skater/goalie columns
         skaters_reduced = skaters_reduced.reset_index()
         goalies_reduced = goalies_reduced.reset_index()
+        
+        # TODO: We're still managing to mingle home and away stats. Need
+        # to segregate those.
+        # Thought: Utilize Utility.json... to take a prefix??
 
         skaters_home = (
             skaters_reduced[skaters_reduced[Keys.team_role] == HomeOrAway.HOME.value]
