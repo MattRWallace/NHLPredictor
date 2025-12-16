@@ -1,3 +1,4 @@
+import os
 from pickle import dump
 
 import statsmodels.api as sm
@@ -13,6 +14,7 @@ from shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()
+pickle_file_name = "LinearRegressionModel.pkl"
 
 class TrainLinearRegression:
     
@@ -78,7 +80,7 @@ class TrainLinearRegression:
         print("Coef: ", model.coef_)
         print("Intercept: ", model.intercept_)
 
-        with open("LinearRegressionModel.pkl", "wb") as file:
+        with open(os.path.join(execution_context.app_dir, pickle_file_name), "wb") as file:
             dump(model, file, protocol=5)
 
         logger.info("End of model training.")
