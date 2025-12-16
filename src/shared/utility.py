@@ -1,6 +1,6 @@
 import os
-import sqlite3
 from pathlib import Path
+from typing import List
 
 import pandas as pd
 from sqlitedict import SqliteDict
@@ -15,7 +15,7 @@ class Utility:
     TODO: Update all the dictionary indexing with this method.
     """
     @staticmethod
-    def json_value_or_default(json_data, *keys, default=0):
+    def json_value_or_default(json_data, *keys: str, default=0):
         try:
             value = json_data
             for key in keys:
@@ -32,7 +32,13 @@ class Utility:
     Values must be of type string or method will throw.
     """   
     @staticmethod
-    def print_table(table, align="", hasHeader=False, pad=2, isGrid=False):
+    def print_table(
+        table: List[List[str]],
+        align: str="",
+        hasHeader: bool=False,
+        pad: int=2,
+        isGrid: bool=False
+    ):
         table = [row[:] for row in table] # copy table
         numRows, numCols = len(table), len(table[0]) # table size
         align = align.ljust(numCols,"L") # align left by default
@@ -77,7 +83,7 @@ class Utility:
     saves and 27 is the total attempts.
     """
     @staticmethod
-    def split_save_try_pair(value):
+    def split_save_try_pair(value: str):
         parts = str(value).split('/')
         parts = [int(part) for part in parts]
 
@@ -111,7 +117,7 @@ class Utility:
         return DBs
     
     def get_pandas_tables(
-        *names,
+        *names: str,
         path: Path
     ):
         DBs = Utility.get_sqlitedict_tables(

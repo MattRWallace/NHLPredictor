@@ -1,9 +1,10 @@
 import json
 from datetime import datetime, timezone
-from typing import List
+from typing import Dict, List
 
 import requests
 from ansimarkup import ansiprint as print
+from sqlitedict import SqliteDict
 
 import shared.execution_context
 from model.game_state import GameState, GameStatesForDataset
@@ -23,7 +24,7 @@ class Builder:
     
     @staticmethod
     def build(
-        seasons,
+        seasons: List[Seasons],
         all_seasons: bool = False
     ):
         logger.info("Call to build starting.")
@@ -119,7 +120,7 @@ class Builder:
 
     @staticmethod
     def build_stats_by_season(
-        data,
+        data: Dict[str, SqliteDict],
         seasons: List[str] = [x.value for  x in Seasons.items()],
     ):
         logger.info("Start building seasons.")
@@ -141,7 +142,10 @@ class Builder:
         logger.info("Finished building seasons.")
     
     @staticmethod
-    def process_raw_games(games_raw, data):
+    def process_raw_games(
+        games_raw,
+        data: Dict[str, SqliteDict]
+    ):
         logger.info("Start processing game.")
         games_db = data[DB.games_table_name]
         meta_db = data[DB.meta_table_name]
@@ -209,7 +213,10 @@ class Builder:
         logger.info("Finished processing game.")
 
     @staticmethod
-    def process_box_score(box_score, data):
+    def process_box_score(
+        box_score,
+        data: Dict[str, SqliteDict]
+    ):
         logger.info("Processing box_score. BoxScore: '{box_score}'.")
         
         if Keys.player_by_game_stats not in box_score:
@@ -223,31 +230,41 @@ class Builder:
             home_team[Keys.forwards] + home_team[Keys.defense],
             data,
             utl.json_value_or_default(box_score, Keys.id),
-            utl.json_value_or_default(box_score, Keys.home_team, Keys.id)
+            utl.json_value_or_default(box_score, Keys.home_team, Keys.id),
+            HomeOrAway.HOME
         )
         Builder.process_goalies(
             home_team[Keys.goalies],
             data,
             utl.json_value_or_default(box_score, Keys.id),
-            utl.json_value_or_default(box_score, Keys.home_team, Keys.id)
+            utl.json_value_or_default(box_score, Keys.home_team, Keys.id),
+            HomeOrAway.HOME
         )
         Builder.process_skaters(
             away_team[Keys.forwards] + away_team[Keys.defense],
             data,
             utl.json_value_or_default(box_score, Keys.id),
-            utl.json_value_or_default(box_score, Keys.away_team, Keys.id)
+            utl.json_value_or_default(box_score, Keys.away_team, Keys.id),
+            HomeOrAway.AWAY
         )
         Builder.process_goalies(
             away_team[Keys.goalies],
             data,
             utl.json_value_or_default(box_score, Keys.id),
-            utl.json_value_or_default(box_score, Keys.away_team, Keys.id)
+            utl.json_value_or_default(box_score, Keys.away_team, Keys.id),
+            HomeOrAway.AWAY
         )
 
         logger.info("Box score processed.")
 
     @staticmethod
-    def process_skaters(skaters, data, game_id, team_id):
+    def process_skaters(
+        skaters,
+        data: Dict[str, SqliteDict],
+        game_id,
+        team_id,
+        team_role: HomeOrAway
+    ):
         logger.info("Started adding skaters to database.")
         skater_stats_db = data[DB.skater_stats_table_name]
         meta_db = data[DB.meta_table_name]
@@ -271,7 +288,8 @@ class Builder:
                 Keys.shifts: utl.json_value_or_default(skater, Keys.shifts),
                 Keys.giveaways: utl.json_value_or_default(skater, Keys.giveaways),
                 Keys.takeaways: utl.json_value_or_default(skater, Keys.takeaways),
-                Keys.team_id: team_id
+                Keys.team_id: team_id,
+                Keys.team_role: team_role.value
             }
 
         meta_db[DB.skater_stats_table_name] = {
@@ -280,7 +298,13 @@ class Builder:
         logger.info("Finished adding skaters to database.")
 
     @staticmethod
-    def process_goalies(goalies, data, game_id, team_id):
+    def process_goalies(
+        goalies,
+        data: Dict[str, SqliteDict],
+        game_id,
+        team_id,
+        team_role: HomeOrAway
+    ):
         logger.info("Started adding goalies to database.")
         goalie_stats_db = data[DB.goalie_stats_table_name]
         meta_db = data[DB.meta_table_name]
@@ -305,7 +329,8 @@ class Builder:
                 Keys.decision: utl.json_value_or_default(goalie, Keys.decision),
                 Keys.shots_against: utl.json_value_or_default(goalie, Keys.shots_against),
                 Keys.saves: utl.json_value_or_default(goalie, Keys.saves),
-                Keys.team_id: team_id
+                Keys.team_id: team_id,
+                Keys.team_role: team_role.value
             }
 
         meta_db[DB.goalie_stats_table_name] = {
@@ -314,7 +339,9 @@ class Builder:
         logger.info("Finished adding goalies to database.")
 
     @staticmethod
-    def populate_players(data):
+    def populate_players(
+        data: Dict[str, SqliteDict]
+    ):
         logger.info("Started adding players to database.")
         players_db = data[DB.players_table_name]
         meta_db = data[DB.meta_table_name]

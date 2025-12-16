@@ -6,7 +6,7 @@ from pythonjsonlogger import jsonlogger
 class LoggingConfig:
 
     @staticmethod
-    def get_logger(name):
+    def get_logger(name: str):
         logger = logging.getLogger(name)
         logger.setLevel(logging.INFO)
 

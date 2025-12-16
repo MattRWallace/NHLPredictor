@@ -1,6 +1,10 @@
+from typing import Dict
+
 import pandas as pd
+from sqlitedict import SqliteDict
 
 import shared.execution_context
+from model.home_or_away import HomeOrAway
 from shared.constants.database import Database as DB
 from shared.constants.json import JSON as Keys
 from shared.logging_config import LoggingConfig
@@ -13,23 +17,29 @@ class AveragePlayerSummarizer:
     def get_file_name():
         return "AverageSummarizer"
     
-    def summarize(self, data):
+    def summarize(
+        self,
+        data: Dict[str, SqliteDict]
+    ):
         self.cleanup_data(data)
         return self.reduce_data(data)
 
-    def cleanup_data(self, data):
+    def cleanup_data(
+        self,
+        data: Dict[str, SqliteDict]
+    ):
         skaters_db = data[DB.skater_stats_table_name]
         goalies_db = data[DB.goalie_stats_table_name]
 
         # TODO: Fix build-stage bug introducing duplicates then remove this.
-        skaters_db = skaters_db.groupby([Keys.game_id, Keys.player_id]).first()
-        goalies_db = goalies_db.groupby([Keys.game_id, Keys.player_id]).first()
+        skaters_db = skaters_db.groupby([Keys.game_id, Keys.player_id]).first().reset_index()
+        goalies_db = goalies_db.groupby([Keys.game_id, Keys.player_id]).first().reset_index()
 
         # Clean up the skaters_db column datatypes
         skaters_db = skaters_db.astype({
             Keys.toi: "string",
         })
-
+        
         # The shot columns provide us with shots againsts, saves against and goals
         # against. Since saves + goals = shots, this may be too much information.
         # There are several columns like this that may be introducing duplicates
@@ -57,12 +67,15 @@ class AveragePlayerSummarizer:
         data[DB.skater_stats_table_name] = skaters_db
         data[DB.goalie_stats_table_name] = goalies_db
 
-    def reduce_data(self, data):
+    def reduce_data(
+        self,
+        data: Dict[str, SqliteDict]
+    ):
         # TODO: break this into smaller methods
         skaters_db = data[DB.skater_stats_table_name]
         goalies_db = data[DB.goalie_stats_table_name]
 
-        skaters_grouped = skaters_db.groupby([Keys.game_id, Keys.team_id])
+        skaters_grouped = skaters_db.groupby([Keys.game_id, Keys.team_id, Keys.team_role])
         skaters_reduced = pd.DataFrame({
             Keys.goals: skaters_grouped[Keys.goals].sum(),
             Keys.assists: skaters_grouped[Keys.assists].sum(),
@@ -80,7 +93,7 @@ class AveragePlayerSummarizer:
             Keys.takeaways: skaters_grouped[Keys.takeaways].sum(),
         })
 
-        goalies_grouped = goalies_db.groupby([Keys.game_id, Keys.team_id])
+        goalies_grouped = goalies_db.groupby([Keys.game_id, Keys.team_id, Keys.team_role])
         goalies_reduced = pd.DataFrame({
             Keys.even_strength_shots_against: goalies_grouped[Keys.even_strength_shots_against].sum(),
             Keys.power_play_shots_against: goalies_grouped[Keys.power_play_shots_against].sum(),
@@ -103,8 +116,41 @@ class AveragePlayerSummarizer:
             Keys.save_saves_against: goalies_grouped[Keys.save_saves_against].sum(),
         })
 
+        # TODO: Prefix skater/goalie columns
         skaters_reduced = skaters_reduced.reset_index()
         goalies_reduced = goalies_reduced.reset_index()
+
+        skaters_home = (
+            skaters_reduced[skaters_reduced[Keys.team_role] == HomeOrAway.HOME.value]
+            .drop([Keys.team_role, Keys.team_id], axis=1)
+        )
+        skaters_away = (
+            skaters_reduced[skaters_reduced[Keys.team_role] == HomeOrAway.AWAY.value]
+            .drop([Keys.team_role, Keys.team_id], axis=1)
+        )
+        skaters_reduced = pd.merge(
+            skaters_home,
+            skaters_away,
+            how='outer',
+            on=Keys.game_id,
+            suffixes=('_home', '_away')
+        ).set_index(Keys.game_id).add_prefix(Keys.skater_prefix)
+
+        goalies_home = (
+            goalies_reduced[goalies_reduced[Keys.team_role] == HomeOrAway.HOME.value]
+            .drop([Keys.team_role, Keys.team_id], axis=1)
+        )
+        goalies_away = (
+            goalies_reduced[goalies_reduced[Keys.team_role] == HomeOrAway.AWAY.value]
+            .drop([Keys.team_role, Keys.team_id], axis=1)
+        )
+        goalies_reduced = pd.merge(
+            goalies_home,
+            goalies_away,
+            how='outer',
+            on=Keys.game_id,
+            suffixes=(Keys.home_suffix, Keys.away_suffix)
+        ).set_index(Keys.game_id).add_prefix(Keys.goalie_prefix)
 
         games_db = data[DB.games_table_name]
         games_db.index.name = Keys.game_id # TODO: We should fix this on the build side
@@ -112,8 +158,9 @@ class AveragePlayerSummarizer:
             skaters_reduced,
             goalies_reduced,
             how='outer',
-            on=[Keys.game_id, Keys.team_id])
-        game_stats = game_stats.set_index(Keys.game_id)
+            on=Keys.game_id
+        )
+        
         wins = pd.DataFrame(games_db[Keys.winner])
         wins.index = wins.index.astype(int)
         game_stats = pd.merge(

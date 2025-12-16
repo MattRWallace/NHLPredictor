@@ -77,3 +77,8 @@ class JSON:
     away_team= "awayTeam"
     score = "score"
     team_id = "teamId"
+    team_role = "teamRole"
+    skater_prefix = "skater_"
+    goalie_prefix = "goalie_"
+    home_suffix = "_home"
+    away_suffix = "_away"

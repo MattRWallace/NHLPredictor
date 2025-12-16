@@ -10,6 +10,6 @@ class Trainer:
     def train(algorithm: Algorithms):
         match algorithm:
             case Algorithms.linear_regression:
-                TrainLinearRegression.train_db()
+                TrainLinearRegression.train()
             case _:
                 logger.error("Invalid algorithm provided to predict.")

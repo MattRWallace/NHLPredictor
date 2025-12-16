@@ -25,7 +25,7 @@ class ExecutionContext:
         return self._summarizer
 
     @summarizer_type.setter
-    def summarizer_type(self, value):
+    def summarizer_type(self, value: str):
         self._summarizer = value
 
     @property
