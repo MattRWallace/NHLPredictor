@@ -12,9 +12,9 @@
             "program": "${file}",
             "console": "integratedTerminal",
             // "args": "build --all-seasons "
-            // "args": "build --all-seasons --update"
+            "args": "build --all-seasons --update"
             // "args": "build --report"
-            "args": "train --algorithm linearregression --output Average_LinearRegressionModel.pkl --summarizer-type average"
+            // "args": "train --algorithm linearregression --output Average_LinearRegressionModel.pkl --summarizer-type average"
         }
     ]
 }
