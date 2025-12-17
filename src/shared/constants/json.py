@@ -17,6 +17,9 @@ class JSON:
     forwards = "forwards"
     defense = "defense"
     goalies = "goalies"
+    
+    # Team related keys
+    common_name = "commonName"
 
     # Stat related keys
     goals = "goals"

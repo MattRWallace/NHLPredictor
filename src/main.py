@@ -104,10 +104,10 @@ def train(
 @app.command()
 def predict(
     algorithm: _algorithm,
+    summarizer_type = _summarizer,
     model: Annotated[str, typer.Option(
-        help="Specify a pickle file containing the pre-trained model to use.",
-        prompt=True
-    )],
+        help="Specify a pickle file containing the pre-trained model to use."
+    )] = "",
     date: Annotated[str, typer.Option(
         help=(
             "Specify a date, all games for this date will be retrieved. This "
@@ -126,12 +126,9 @@ def predict(
             #TODO: Remove the not implemented disclaimer when appropriate
         )
     )] = None,
-    summarizer: _summarizer = None,
-    use_season_totals: Annotated[bool, typer.Option(
+    list: Annotated[bool, typer.Option(
         help=(
-            "Specify to use only the current season stats for prediction. By default the "
-            "player's career stats are used.  Once the season has progressed enough, you "
-            "may get more accuate results using current season stats."
+            "Lists games based on the provided date or date range."
         )
     )] = False,
     app_dir: _app_dir = None
@@ -142,9 +139,14 @@ def predict(
     context = ExecutionContext()
     if app_dir:
         context.app_dir = app_dir
+    context.model = model
+    context.summarizer_type = summarizer_type
     
     from predictor.predictor import Predictor
-    Predictor.predict(algorithm, model, summarizer, date, date_range)
+    if list:
+        Predictor.list_games(date, date_range)
+    else:
+        Predictor.predict(algorithm, date, date_range)
 
 if __name__ == "__main__":
     """Main app entry point.

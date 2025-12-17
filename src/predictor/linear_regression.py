@@ -1,25 +1,24 @@
-from datetime import timedelta
+import os
 from pickle import load
 
-import dateutil.parser as parser
 import numpy as np
 import pandas as pd
 
-from builder.builder import Builder
 from model.home_or_away import HomeOrAway
+from model.summarizer_manager import SummarizerTypes
 from shared.execution_context import ExecutionContext
 from shared.logging_config import LoggingConfig
 from shared.utility import Utility
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()
+summarizer = SummarizerTypes.get_summarizer(execution_context.summarizer_type)
+_model_filename_part = "LinearRegression"
 
 class PredictLinearRegression:
 
     @staticmethod
     def predict(
-        summarizer,
-        model_file_name,
         date,
         date_range_start,
         date_range_end,
@@ -27,21 +26,13 @@ class PredictLinearRegression:
     ):
         data = []
         results_table = [["Game", "Predicted", "Actual"]]
-        with open(model_file_name, "rb") as file:
-            model = load(file)
-
-        if date is not None:
-            date = parser.parse(date)
-            games, number_of_games = (
-                PredictLinearRegression.get_games_for_date(date)
-            )
-        elif date_range_start is not None and date_range_end is not None:
-            games, number_of_games = (
-                PredictLinearRegression.get_games_for_date_range(date_range_start, date_range_end)
-            )
+        
+        if execution_context.model:
+            model_filename = execution_context.output_file
         else:
-            logger.error("No valid date option supplied")
-            return
+            model_filename = f"{summarizer.get_filename_prefix()}_{_model_filename_part}.pkl"
+        with open(os.path.join(execution_context.app_dir, model_filename), "rb") as file:
+            model = load(file)
 
         if (number_of_games <= 0):
             logger.warning("No games on the schedule for chosen date(s).")
@@ -83,22 +74,3 @@ class PredictLinearRegression:
             results_table.append([teams, prediction, actual])
 
         Utility.print_table(results_table)
-
-    @staticmethod
-    def get_games_for_date_range(date_range_start, date_range_end):
-        games = []
-        number_of_games = 0
-
-        number_of_days = (date_range_end - date_range_start).days + 1
-        date_list = [date_range_end - timedelta(days=x) for x in range(number_of_days)]
-        for date in date_list:
-            next_games, next_number = PredictLinearRegression.get_games_for_date(date)
-            games.extend(next_games)
-            number_of_games += next_number
-
-        return games, number_of_games
-
-    @staticmethod
-    def get_games_for_date(date):
-        schedule = execution_context.client.schedule.daily_schedule(str(date)[:10])
-        return schedule["games"], schedule["numberOfGames"]

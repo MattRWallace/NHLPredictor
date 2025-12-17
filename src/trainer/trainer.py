@@ -21,4 +21,4 @@ class Trainer:
             case Algorithms.linear_regression:
                 TrainLinearRegression.train()
             case _:
-                logger.error("Invalid algorithm provided to predict.")
+                logger.error("Invalid algorithm provided to train.")

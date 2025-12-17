@@ -65,6 +65,24 @@ class ExecutionContext:
             value (bool): The value to set allow_update to.
         """
         self._allow_update = value
+    
+    @property
+    def model(self) -> str:
+        """Get the model file name.
+
+        Returns:
+            str: The model file name.
+        """
+        return self._model
+    
+    @model.setter
+    def model(self, value: str):
+        """Set the model file name.
+
+        Args:
+            value (str): The value to set the model file name.
+        """
+        self._model = value
 
     @property   
     def output_file(self) -> str:
