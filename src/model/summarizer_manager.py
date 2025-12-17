@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-import model.average_player_summarizer
+import model.summarizers.average_player_summarizer as avsum
 
 
 class Summarizers(str, Enum):
@@ -15,7 +15,7 @@ class Summarizers(str, Enum):
     def get_summarizer(summarizer: Summarizers):
         match summarizer:
             case Summarizers.average_player_summarizer:
-                return model.average_player_summarizer.AveragePlayerSummarizer()
+                return avsum.AveragePlayerSummarizer()
             case _:
                 # TODO: Shouldn't throw generic Exception
                 raise Exception("Unsupported summarizer specified.")

@@ -6,7 +6,7 @@ from typing_extensions import Annotated
 
 from model.algorithms import Algorithms
 from model.seasons import Seasons
-from model.summarizers import Summarizers
+from model.summarizer_manager import Summarizers
 from shared.execution_context import ExecutionContext
 
 app = typer.Typer()

@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 
-from model.summarizers import Summarizers
+from model.summarizer_manager import Summarizers
 from shared.constants.database import Database as DB
 from shared.execution_context import ExecutionContext
 from shared.logging_config import LoggingConfig

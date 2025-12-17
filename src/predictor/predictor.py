@@ -2,8 +2,8 @@ from daterangeparser import parse as drp
 from nhlpy.nhl_client import NHLClient
 
 from model.algorithms import Algorithms
-from model.average_player_summarizer import AveragePlayerSummarizer
-from model.summarizers import Summarizers
+from model.summarizers.average_player_summarizer import AveragePlayerSummarizer
+from model.summarizer_manager import Summarizers
 from predictor.linear_regression import PredictLinearRegression
 from shared.logging_config import LoggingConfig
 
