@@ -6,12 +6,12 @@ from typing_extensions import Annotated
 
 from model.algorithms import Algorithms
 from model.seasons import Seasons
-from model.summarizer_manager import Summarizers
+from model.summarizer_manager import SummarizerTypes
 from shared.execution_context import ExecutionContext
 
 app = typer.Typer()
 
-_summarizer = Annotated[Summarizers, typer.Option(
+_summarizer = Annotated[SummarizerTypes, typer.Option(
         help="Specify the algorithm to use to summarize roster strength.",
         prompt=True
     )]
@@ -74,10 +74,10 @@ def build(
 @app.command()
 def train(
     algorithm: _algorithm,
+    summarizer_type = _summarizer,
     output: Annotated[str, typer.Option(
         help="Specify the file name for the serialized model."
-    )],
-    summarizer_type = _summarizer,
+    )] = None,
     update: Annotated[bool, typer.Option(
         help=(
             "Allow serialized model to be overwritten."

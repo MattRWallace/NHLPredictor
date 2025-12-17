@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 
-from model.summarizer_manager import Summarizers
+from model.summarizer_manager import SummarizerTypes
 from shared.constants.database import Database as DB
 from shared.execution_context import ExecutionContext
 from shared.logging_config import LoggingConfig
@@ -33,7 +33,7 @@ class TrainLinearRegression:
             path=execution_context.app_dir
         )
 
-        summarizer = Summarizers.get_summarizer(execution_context.summarizer_type)
+        summarizer = SummarizerTypes.get_summarizer(execution_context.summarizer_type)
         game_data = summarizer.summarize(data)
 
         train, test = train_test_split(game_data, test_size=0.2)

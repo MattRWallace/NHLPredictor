@@ -1,10 +1,8 @@
-"""
-Some APIs require the team abbreviation, others require
-the franchise ID. The main API that we're using takes the
-abbreviation, so we use that as our key and iterate. When
-needed, we can use the map to find the franchise ID to use
-when calling subsequent APIs.
-"""
+# Some APIs require the team abbreviation, others require
+# the franchise ID. The main API that we're using takes the
+# abbreviation, so we use that as our key and iterate. When
+# needed, we can use the map to find the franchise ID to use
+# when calling subsequent APIs.
 TeamMap = {
     "MTL": 1,               # Canadiens
     "TOR": 5,               # Maple Leafs
