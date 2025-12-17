@@ -5,9 +5,18 @@ from trainer.linear_regression import TrainLinearRegression
 logger = LoggingConfig.get_logger(__name__)
 
 class Trainer:
+    """Static class providing an entry point for training machine learning
+    models.
+    """
 
     @staticmethod
-    def train(algorithm: Algorithms):
+    def train(algorithm: Algorithms) -> None:
+        """Train a model using the specified algorithm.
+
+        Args:
+            algorithm (Algorithms): The machine learning Algorithm to train a
+            model for.
+        """
         match algorithm:
             case Algorithms.linear_regression:
                 TrainLinearRegression.train()

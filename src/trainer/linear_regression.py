@@ -19,9 +19,13 @@ execution_context = ExecutionContext()
 _model_filename_part = "LinearRegression"
 
 class TrainLinearRegression:
+    """Static class to train a linear regression model on NHL data.
+    """
     
     @staticmethod
-    def train():
+    def train() -> None:
+        """Entry point for linear regression model training.
+        """
         logger.info("Start of model training.")
         
         data = utl.get_pandas_tables(
