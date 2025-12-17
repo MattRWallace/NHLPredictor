@@ -16,7 +16,7 @@ from shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()
-pickle_file_name = "LinearRegressionModel.pkl"
+_model_filename_part = "LinearRegression"
 
 class TrainLinearRegression:
     
@@ -60,7 +60,6 @@ class TrainLinearRegression:
         train_pred = model.predict(train)
         r_squared = r2_score(train_targets, train_pred)
         summary_table.append(["R-squared", str(r_squared)])
-        # print("R-squared: ", r_squared)
 
         # P-Values
         x_intercept = sm.add_constant(train)
@@ -68,13 +67,11 @@ class TrainLinearRegression:
         pvalue_table = list(map(list, model_sm.pvalues.items()))
         for idx in range(len(pvalue_table)):
             pvalue_table[idx][1] = np.format_float_scientific(pvalue_table[idx][1])
-        # print("P-Values: ", model_sm.pvalues)
         
         summary_table.append([
             "Mean squared error:",
             "%.2f" % mean_squared_error(train_targets, train_pred)
         ])
-        # print("Mean squared error: %.2f" % mean_squared_error(train_targets, train_pred))
 
         print("<green>Stats from train operation:</green>")
         utl.print_table(summary_table)
@@ -87,7 +84,6 @@ class TrainLinearRegression:
         test_pred = model.predict(test)
         r_squared = r2_score(test_targets, test_pred)
         summary_table.append(["R-squared: ", str(r_squared)])
-        # print("R-squared: ", r_squared)
 
         # P-Values
         x_intercept = sm.add_constant(test)
@@ -95,13 +91,11 @@ class TrainLinearRegression:
         pvalue_table = list(map(list, model_sm.pvalues.items()))
         for idx in range(len(pvalue_table)):
             pvalue_table[idx][1] = np.format_float_scientific(pvalue_table[idx][1])
-        # print("P-Values: ", model_sm.pvalues)
 
         summary_table.append([
             "Mean squared error:",
             "%.2f" % mean_squared_error(test_targets, test_pred)
         ])
-        # print("Mean squared error: %.2f" % mean_squared_error(test_targets, test_pred))
 
         print("<green>Stats from test operation:</green>")
         utl.print_table(summary_table)
@@ -114,8 +108,12 @@ class TrainLinearRegression:
         # print("Coef: ", model.coef_)
         # print("Intercept: ", model.intercept_)
 
+        if execution_context.output_file:
+            filename = execution_context.output_file
+        else:
+            filename = f"{summarizer.get_filename_prefix()}_{_model_filename_part}.pkl"
 
-        with open(os.path.join(execution_context.app_dir, pickle_file_name), "wb") as file:
+        with open(os.path.join(execution_context.app_dir, filename), "wb") as file:
             dump(model, file, protocol=5)
 
         logger.info("End of model training.")
