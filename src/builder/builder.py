@@ -21,12 +21,21 @@ logger = LoggingConfig.get_logger(__name__)
 execution_context = shared.execution_context.ExecutionContext()
 
 class Builder:
+    """Static class with API to fetch desired data from the public NHL API and
+    save it in local databases.
+    """
     
     @staticmethod
     def build(
         seasons: List[Seasons],
         all_seasons: bool = False
-    ):
+    ) -> None:
+        """Main entry point for the builder.
+
+        Args:
+            seasons (List[Seasons]): List of seasons to include in the data set.
+            all_seasons (bool, optional): Specify if all seasons should be included. Defaults to False.
+        """
         logger.info("Call to build starting.")
         execution_context.ensure_app_dir()
         data = utl.get_sqlitedict_tables(
@@ -40,16 +49,18 @@ class Builder:
         )
         
         if all_seasons:
-            Builder.build_stats_by_season(data)
+            Builder._build_stats_by_season(data)
         elif seasons is not None:
-            Builder.build_stats_by_season(data, seasons)
+            Builder._build_stats_by_season(data, seasons)
         else:
             logger.error("Invalid season specification, cannot build data set.")
         Builder.populate_players(data)
         logger.info("Call to build is complete.")
     
     @staticmethod
-    def report():
+    def report() -> None:
+        """Prints a report on the current state of the raw data.
+        """
         logger.info("Start dataset report.")
         execution_context.ensure_app_dir()
         data = utl.get_sqlitedict_tables(
@@ -119,10 +130,17 @@ class Builder:
         logger.info("Finished dataset report.")
 
     @staticmethod
-    def build_stats_by_season(
+    def _build_stats_by_season(
         data: Dict[str, SqliteDict],
         seasons: List[str] = [x.value for  x in Seasons.items()],
-    ):
+    ) -> None:
+        """Iterates over the specified seasons and adds those seasons' data to
+        the local database.
+
+        Args:
+            data (Dict[str, SqliteDict]): Dictionary of tables to store raw data in.
+            seasons (List[str], optional): List of seasons to process. Defaults to all items in Seasons enumeration.
+        """
         logger.info("Start building seasons.")
         for season in seasons:
             logger.info(f"Start of processing for season '{season}'.")
@@ -131,7 +149,7 @@ class Builder:
                 try:
                     games_raw = execution_context.client.schedule.team_season_schedule(team, season)[Keys.games]
                     logger.info(f"Found '{len(games_raw)}' games for team '{team}' in season '{season}'.")
-                    Builder.process_raw_games(games_raw, data)
+                    Builder._process_raw_games(games_raw, data)
                 except Exception as e:
                     print("<red>Exception occured. Check logs.</red>")
                     logger.exception(
@@ -142,10 +160,18 @@ class Builder:
         logger.info("Finished building seasons.")
     
     @staticmethod
-    def process_raw_games(
-        games_raw,
+    def _process_raw_games(
+        games_raw: Dict[str, object],
         data: Dict[str, SqliteDict]
-    ):
+    ) -> None:
+        """Iterates over the provided raw game data and adds it to the local
+        database.
+
+        Args:
+            games_raw (Dict[str, object]): Dictionary with raw game JSON.
+            data (Dict[str, SqliteDict]): Dictionary of tables to store raw data
+            in.
+        """
         logger.info("Start processing game.")
         games_db = data[DB.games_table_name]
         meta_db = data[DB.meta_table_name]
@@ -191,7 +217,7 @@ class Builder:
 
                 try:
                     box_score = execution_context.client.game_center.boxscore(game[Keys.id])
-                    Builder.process_box_score(box_score, data)
+                    Builder._process_box_score(box_score, data)
                 except Exception as e:
                     print("\033[31mException occured. Check logs.\033[0m")
                     logger.exception(
@@ -213,10 +239,17 @@ class Builder:
         logger.info("Finished processing game.")
 
     @staticmethod
-    def process_box_score(
-        box_score,
+    def _process_box_score(
+        box_score: Dict[str, object],
         data: Dict[str, SqliteDict]
-    ):
+    ) -> None:
+        """Iterates of the provided raw box score data and adds it to the local
+        database.
+
+        Args:
+            box_score (Dict[str, object]): Dictionary with raw box score JSON.
+            data (Dict[str, SqliteDict]): Dictionary of tables to store raw data in.
+        """
         logger.info("Processing box_score. BoxScore: '{box_score}'.")
         
         if Keys.player_by_game_stats not in box_score:
@@ -226,28 +259,28 @@ class Builder:
         home_team = utl.json_value_or_default(box_score, Keys.player_by_game_stats, Keys.home_team)
         away_team = utl.json_value_or_default(box_score, Keys.player_by_game_stats, Keys.away_team)
 
-        Builder.process_skaters(
+        Builder._process_skaters(
             home_team[Keys.forwards] + home_team[Keys.defense],
             data,
             utl.json_value_or_default(box_score, Keys.id),
             utl.json_value_or_default(box_score, Keys.home_team, Keys.id),
             HomeOrAway.HOME
         )
-        Builder.process_goalies(
+        Builder._process_goalies(
             home_team[Keys.goalies],
             data,
             utl.json_value_or_default(box_score, Keys.id),
             utl.json_value_or_default(box_score, Keys.home_team, Keys.id),
             HomeOrAway.HOME
         )
-        Builder.process_skaters(
+        Builder._process_skaters(
             away_team[Keys.forwards] + away_team[Keys.defense],
             data,
             utl.json_value_or_default(box_score, Keys.id),
             utl.json_value_or_default(box_score, Keys.away_team, Keys.id),
             HomeOrAway.AWAY
         )
-        Builder.process_goalies(
+        Builder._process_goalies(
             away_team[Keys.goalies],
             data,
             utl.json_value_or_default(box_score, Keys.id),
@@ -258,13 +291,22 @@ class Builder:
         logger.info("Box score processed.")
 
     @staticmethod
-    def process_skaters(
-        skaters,
+    def _process_skaters(
+        skaters: Dict[str, object],
         data: Dict[str, SqliteDict],
-        game_id,
-        team_id,
+        game_id: str,
+        team_id: str,
         team_role: HomeOrAway
-    ):
+    ) -> None:
+        """Process the skaters for a given game
+
+        Args:
+            skaters (Dict[str, object]): Skater JSON data.
+            data (Dict[str, SqliteDict]): Dictionary of tables to store raw data in.
+            game_id (str): Game ID for the game represented in the data.
+            team_id (str): Team ID for the team represented in the data.
+            team_role (HomeOrAway): Team role represented in the data.
+        """
         logger.info("Started adding skaters to database.")
         skater_stats_db = data[DB.skater_stats_table_name]
         meta_db = data[DB.meta_table_name]
@@ -298,13 +340,22 @@ class Builder:
         logger.info("Finished adding skaters to database.")
 
     @staticmethod
-    def process_goalies(
-        goalies,
+    def _process_goalies(
+        goalies: Dict[str, object],
         data: Dict[str, SqliteDict],
-        game_id,
-        team_id,
+        game_id: str,
+        team_id: str,
         team_role: HomeOrAway
-    ):
+    ) -> None:
+        """Process the goalies in the provided data.
+
+        Args:
+            goalies (Dict[str, object]): Goalie JSON data.
+            data (Dict[str, SqliteDict]): Dictionary of tables to store raw data in.
+            game_id (str): Game ID for the game represented in the data.
+            team_id (str): Team ID for the team represented in the data.
+            team_role (HomeOrAway): Team role represented in the data.
+        """
         logger.info("Started adding goalies to database.")
         goalie_stats_db = data[DB.goalie_stats_table_name]
         meta_db = data[DB.meta_table_name]
@@ -341,7 +392,12 @@ class Builder:
     @staticmethod
     def populate_players(
         data: Dict[str, SqliteDict]
-    ):
+    ) -> None:
+        """Populate the players into the players table.
+
+        Args:
+            data (Dict[str, SqliteDict]): Dictionary of tables to store raw data in.
+        """
         logger.info("Started adding players to database.")
         players_db = data[DB.players_table_name]
         meta_db = data[DB.meta_table_name]
