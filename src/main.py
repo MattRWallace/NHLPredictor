@@ -11,17 +11,20 @@ from shared.execution_context import ExecutionContext
 
 app = typer.Typer()
 
+# Option definition for specifying a summarizer.
 _summarizer = Annotated[SummarizerTypes, typer.Option(
         help="Specify the algorithm to use to summarize roster strength.",
         prompt=True
     )]
 
+# Option definition for specifying a machine learning algorithm.
 _algorithm = Annotated[Algorithms, typer.Option(
         help="Specify which ML algorithm to use.",
         case_sensitive=False,
         prompt=True
     )]
 
+# Option definition for specifying the application directory.
 _app_dir = Annotated[Path, typer.Option(
     help=(
         "Specify the location to save related files. Default location is "
@@ -144,4 +147,6 @@ def predict(
     Predictor.predict(algorithm, model, summarizer, date, date_range)
 
 if __name__ == "__main__":
+    """Main app entry point.
+    """
     app()
