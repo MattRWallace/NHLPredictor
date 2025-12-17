@@ -37,7 +37,7 @@ class Builder:
             all_seasons (bool, optional): Specify if all seasons should be included. Defaults to False.
         """
         logger.info("Call to build starting.")
-        execution_context.ensure_app_dir()
+        execution_context._ensure_app_dir()
         data = utl.get_sqlitedict_tables(
             DB.players_table_name,
             DB.skater_stats_table_name,
@@ -62,7 +62,7 @@ class Builder:
         """Prints a report on the current state of the raw data.
         """
         logger.info("Start dataset report.")
-        execution_context.ensure_app_dir()
+        execution_context._ensure_app_dir()
         data = utl.get_sqlitedict_tables(
             DB.players_table_name,
             DB.skater_stats_table_name,

@@ -1,27 +1,24 @@
 class JSON:
+    """Constants related to JSON
+    """
+    
     default = "default"
     last_update = "lastUpdate"
 
-    """
-    Game related keys.
-    """
+    # Game related keys.
     games = "games"
     id = "id"
     season = "season"
     game_type = "gameType"
     game_state = "gameState"
     player_by_game_stats = "playerByGameStats"
-    
-    
     home_team = "homeTeam"
     away_team = "awayTeam"
     forwards = "forwards"
     defense = "defense"
     goalies = "goalies"
 
-    """
-    Stat related keys
-    """
+    # Stat related keys
     goals = "goals"
     assists = "assists"
     points = "points"
@@ -54,9 +51,7 @@ class JSON:
     shots_against = "shotsAgainst"
     saves = "saves"
 
-    """
-    Player related keys
-    """
+    # Player related keys
     player_id = "playerId"
     game_id = "gameId"
     is_Active = "isActive"
@@ -66,12 +61,9 @@ class JSON:
     height_in_cm = "heightInCentimeters"
     weight_in_kg = "weightInKilograms"
 
-    """
-    Custom keys. 
-    
-    These are typically key names for the DB that don't exist in
-    the API JSON response formats.
-    """
+    # Custom keys. 
+    # These are typically key names for the DB that don't exist in
+    # the API JSON response formats.
     winner = "winner"
     home_team = "homeTeam"
     away_team= "awayTeam"

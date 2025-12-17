@@ -4,9 +4,19 @@ from pythonjsonlogger import jsonlogger
 
 
 class LoggingConfig:
+    """Class to manage logging configuration.
+    """
 
     @staticmethod
     def get_logger(name: str):
+        """Get a logger with the provided name.
+
+        Args:
+            name (str): Logger name.
+
+        Returns:
+            _type_: A properly configured logging object.
+        """
         logger = logging.getLogger(name)
         logger.setLevel(logging.INFO)
 
