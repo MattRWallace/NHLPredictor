@@ -63,6 +63,7 @@ class AveragePlayerSummarizer(Summarizer):
         data[DB.goalie_stats_table_name] = goalies_db
 
     def _fix_skater_column_dtypes(
+        self,
         skaters: pd.DataFrame
     ) -> pd.DataFrame:
         """Corrects the column dtypes for skater data.
@@ -78,6 +79,7 @@ class AveragePlayerSummarizer(Summarizer):
         })
     
     def _fix_goalie_column_dtypes(
+        self,
         goalies: pd.DataFrame
     ) -> pd.DataFrame:
         """Corrects the column dtypes for goalie data.
@@ -107,6 +109,7 @@ class AveragePlayerSummarizer(Summarizer):
     # when split.
     # TODO: Need to unpack if these relationships are bad for the model.
     def _split_compound_goalie_stats(
+        self,
         goalies: pd.DataFrame
     ) -> None:
         """Splits columns with compound values into individual columns. Changes are made in place.
@@ -192,6 +195,7 @@ class AveragePlayerSummarizer(Summarizer):
         )
     
     def _group_and_flatten_skater_stats(
+        self,
         skaters_db: pd.DataFrame
     ) -> pd.DataFrame:
         """Groups stats entries by game and then flattens skater stats into single stat line.
@@ -223,6 +227,7 @@ class AveragePlayerSummarizer(Summarizer):
         return skaters_reduced.reset_index()
         
     def _group_and_flatten_goalie_stats(
+        self,
         goalies_db: pd.DataFrame
     ) -> pd.DataFrame:
         """Groups stats entries by game and then flatten goalie stats into single stat line.
@@ -259,6 +264,7 @@ class AveragePlayerSummarizer(Summarizer):
         return goalies_reduced.reset_index()
 
     def _flatten_home_and_away(
+        self,
         data: pd.DataFrame,
         prefix: str
     ) -> pd.DataFrame:
