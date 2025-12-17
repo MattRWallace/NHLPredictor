@@ -6,22 +6,25 @@ from typing_extensions import Annotated
 
 from model.algorithms import Algorithms
 from model.seasons import Seasons
-from model.summarizers import Summarizers
+from model.summarizer_manager import SummarizerTypes
 from shared.execution_context import ExecutionContext
 
 app = typer.Typer()
 
-_summarizer = Annotated[Summarizers, typer.Option(
+# Option definition for specifying a summarizer.
+_summarizer = Annotated[SummarizerTypes, typer.Option(
         help="Specify the algorithm to use to summarize roster strength.",
         prompt=True
     )]
 
+# Option definition for specifying a machine learning algorithm.
 _algorithm = Annotated[Algorithms, typer.Option(
         help="Specify which ML algorithm to use.",
         case_sensitive=False,
         prompt=True
     )]
 
+# Option definition for specifying the application directory.
 _app_dir = Annotated[Path, typer.Option(
     help=(
         "Specify the location to save related files. Default location is "
@@ -74,10 +77,10 @@ def build(
 @app.command()
 def train(
     algorithm: _algorithm,
+    summarizer_type = _summarizer,
     output: Annotated[str, typer.Option(
         help="Specify the file name for the serialized model."
-    )],
-    summarizer_type = _summarizer,
+    )] = None,
     update: Annotated[bool, typer.Option(
         help=(
             "Allow serialized model to be overwritten."
@@ -144,4 +147,6 @@ def predict(
     Predictor.predict(algorithm, model, summarizer, date, date_range)
 
 if __name__ == "__main__":
+    """Main app entry point.
+    """
     app()

@@ -4,15 +4,19 @@ import pandas as pd
 from sqlitedict import SqliteDict
 
 from model.home_or_away import HomeOrAway
+from model.summarizers.summarizer import Summarizer
 from shared.constants.database import Database as DB
 from shared.constants.json import JSON as Keys
 from shared.logging_config import LoggingConfig
 
 logger = LoggingConfig.get_logger(__name__)
 
-class AveragePlayerSummarizer:
+class AveragePlayerSummarizer(Summarizer):
+    """Summarizer that simply averages or sums, as appropriate, each statistic
+    across a game roster.
+    """
 
-    def get_file_name() -> str:
+    def get_filename_prefix() -> str:
         """Returns a prefix for naming the model save file with.
 
         Returns:
