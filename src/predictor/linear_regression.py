@@ -1,5 +1,6 @@
 import os
 from pickle import load
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -19,10 +20,8 @@ class PredictLinearRegression:
 
     @staticmethod
     def predict(
-        date,
-        date_range_start,
-        date_range_end,
-        use_season_totals
+        games: Dict[str, object],
+        number_of_games: int
     ):
         data = []
         results_table = [["Game", "Predicted", "Actual"]]

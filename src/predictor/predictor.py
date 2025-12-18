@@ -21,17 +21,22 @@ class Predictor:
         date_range: str = None,
         use_season_totals: bool = False
     ) -> None:
-        date_range_start, date_range_end = Predictor._parse_date_range(date_range)
+        games, num_games = Predictor._get_games(date, date_range)
         match algorithm:
             case Algorithms.linear_regression:
                 PredictLinearRegression.predict(
-                    date,
-                    date_range_start,
-                    date_range_end,
-                    use_season_totals
-                    )
+                    games,
+                    num_games
+                )
             case _:
                 logger.error("Invalid algorithm provided to predict.")
+    
+    @staticmethod
+    def predict_single_game(
+        algorithm: Algorithms,
+        game_id: str
+    ):
+        pass
     
     @staticmethod
     def list_games(

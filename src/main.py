@@ -77,7 +77,7 @@ def build(
 @app.command()
 def train(
     algorithm: _algorithm,
-    summarizer_type = _summarizer,
+    summarizer_type: _summarizer,
     output: Annotated[str, typer.Option(
         help="Specify the file name for the serialized model."
     )] = None,
@@ -103,8 +103,8 @@ def train(
 
 @app.command()
 def predict(
-    algorithm: _algorithm,
-    summarizer_type = _summarizer,
+    algorithm: _algorithm = "",
+    summarizer_type: _summarizer = "",
     model: Annotated[str, typer.Option(
         help="Specify a pickle file containing the pre-trained model to use."
     )] = "",
@@ -131,6 +131,11 @@ def predict(
             "Lists games based on the provided date or date range."
         )
     )] = False,
+    game_id: Annotated[int, typer.Option(
+        help=(
+            "Specify a game to predict by its game ID."
+        )
+    )] = 0,
     app_dir: _app_dir = None
 ):
     """
@@ -145,6 +150,8 @@ def predict(
     from predictor.predictor import Predictor
     if list:
         Predictor.list_games(date, date_range)
+    if game_id:
+        Predictor.predict_single_game(algorithm, game_id)
     else:
         Predictor.predict(algorithm, date, date_range)
 
