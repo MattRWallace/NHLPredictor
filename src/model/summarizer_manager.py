@@ -8,6 +8,7 @@ from model.summarizers.summarizer import Summarizer
 class SummarizerTypes(str, Enum):
     """Enumeration of the supported summarizer types.
     """
+    none = "none"
     average_player_summarizer = "average"
 
     @staticmethod

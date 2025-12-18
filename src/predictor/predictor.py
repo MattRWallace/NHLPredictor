@@ -36,7 +36,7 @@ class Predictor:
         algorithm: Algorithms,
         game_id: str
     ):
-        pass
+        print(f"Placeholder. Algorithm: '{algorithm}', GameId: '{game_id}'.")
     
     @staticmethod
     def list_games(

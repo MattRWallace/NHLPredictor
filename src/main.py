@@ -9,19 +9,19 @@ from model.seasons import Seasons
 from model.summarizer_manager import SummarizerTypes
 from shared.execution_context import ExecutionContext
 
+# TODO: Review the CLI again.  Is there a pythonic way to do parameter sets?
+
 app = typer.Typer()
 
 # Option definition for specifying a summarizer.
 _summarizer = Annotated[SummarizerTypes, typer.Option(
         help="Specify the algorithm to use to summarize roster strength.",
-        prompt=True
     )]
 
 # Option definition for specifying a machine learning algorithm.
 _algorithm = Annotated[Algorithms, typer.Option(
         help="Specify which ML algorithm to use.",
         case_sensitive=False,
-        prompt=True
     )]
 
 # Option definition for specifying the application directory.
@@ -76,8 +76,8 @@ def build(
 
 @app.command()
 def train(
-    algorithm: _algorithm,
-    summarizer_type: _summarizer,
+    algorithm: _algorithm = Algorithms.none,
+    summarizer_type: _summarizer = SummarizerTypes.none,
     output: Annotated[str, typer.Option(
         help="Specify the file name for the serialized model."
     )] = None,
@@ -103,8 +103,8 @@ def train(
 
 @app.command()
 def predict(
-    algorithm: _algorithm = "",
-    summarizer_type: _summarizer = "",
+    algorithm: _algorithm = Algorithms.none,
+    summarizer_type: _summarizer = SummarizerTypes.none,
     model: Annotated[str, typer.Option(
         help="Specify a pickle file containing the pre-trained model to use."
     )] = "",

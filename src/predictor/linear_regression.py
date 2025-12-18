@@ -9,11 +9,12 @@ from model.home_or_away import HomeOrAway
 from model.summarizer_manager import SummarizerTypes
 from shared.execution_context import ExecutionContext
 from shared.logging_config import LoggingConfig
-from shared.utility import Utility
+from shared.constants.json import JSON as Keys
+from shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()
-summarizer = SummarizerTypes.get_summarizer(execution_context.summarizer_type)
+# summarizer = SummarizerTypes.get_summarizer(execution_context.summarizer_type)
 _model_filename_part = "LinearRegression"
 
 class PredictLinearRegression:
@@ -25,6 +26,7 @@ class PredictLinearRegression:
     ):
         data = []
         results_table = [["Game", "Predicted", "Actual"]]
+        summarizer = SummarizerTypes.get_summarizer(execution_context.summarizer_type)
         
         if execution_context.model:
             model_filename = execution_context.output_file
@@ -38,12 +40,15 @@ class PredictLinearRegression:
             return
 
         # TODO: No referencing back to the builder
-        # for game in games:
-        #     logger.info(f"Processing game. ID: '{game["id"]}'.")
-        #     box_score = execution_context.client.game_center.boxscore(game["id"])
-        #     entry = Builder.process_game_historical(box_score, summarizer, use_season_totals)
-        #     if entry is not None:
-        #         data.append(entry)
+        for game in games:
+            logger.info(f"Processing game. ID: '{utl.json_value_or_default(game, Keys.id)}'.")
+            box_score = execution_context.client.game_center.boxscore(
+                utl.json_value_or_default(game, Keys.id)
+            )
+            
+            entry = Builder.process_game_historical(box_score, summarizer, use_season_totals)
+            if entry is not None:
+                data.append(entry)
 
         if (len(data)) == 0:
             logger.warning("None of the specified games have released rosters yet.")
@@ -72,4 +77,4 @@ class PredictLinearRegression:
             actual = HomeOrAway(int(actuals[i])).name
             results_table.append([teams, prediction, actual])
 
-        Utility.print_table(results_table)
+        utl.print_table(results_table)
