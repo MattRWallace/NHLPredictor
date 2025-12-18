@@ -1,12 +1,14 @@
 import os
 from pickle import load
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
 
 from model.home_or_away import HomeOrAway
+from model.summarizers.summarizer import Summarizer
 from model.summarizer_manager import SummarizerTypes
+from shared.constants.database import Database as DB
 from shared.execution_context import ExecutionContext
 from shared.logging_config import LoggingConfig
 from shared.constants.json import JSON as Keys
@@ -14,67 +16,93 @@ from shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()
-# summarizer = SummarizerTypes.get_summarizer(execution_context.summarizer_type)
+_summarizer = None
+_model = None
 _model_filename_part = "LinearRegression"
 
 class PredictLinearRegression:
 
     @staticmethod
     def predict(
-        games: Dict[str, object],
-        number_of_games: int
+        games: List[int],
     ):
-        data = []
-        results_table = [["Game", "Predicted", "Actual"]]
-        summarizer = SummarizerTypes.get_summarizer(execution_context.summarizer_type)
-        
-        if execution_context.model:
-            model_filename = execution_context.output_file
-        else:
-            model_filename = f"{summarizer.get_filename_prefix()}_{_model_filename_part}.pkl"
-        with open(os.path.join(execution_context.app_dir, model_filename), "rb") as file:
-            model = load(file)
+        """Predict the provided games.
 
-        if (number_of_games <= 0):
+        Args:
+            games (List[int]): List of game IDs for the games to be predicted.
+        """
+        game_stats = pd.DataFrame()
+        data = utl.get_pandas_tables(
+            DB.players_table_name,
+            DB.skater_stats_table_name,
+            DB.goalie_stats_table_name,
+            DB.games_table_name,
+            path=execution_context.app_dir,
+        )
+        results_table = [["Away", "Home", "Predicted", "Raw"]]
+        PredictLinearRegression._ensure_summarizer()
+        PredictLinearRegression._ensure_model()
+
+        if not games:
+            # TODO: Check as precondition?
             logger.warning("No games on the schedule for chosen date(s).")
             return
-
-        # TODO: No referencing back to the builder
-        for game in games:
-            logger.info(f"Processing game. ID: '{utl.json_value_or_default(game, Keys.id)}'.")
-            box_score = execution_context.client.game_center.boxscore(
-                utl.json_value_or_default(game, Keys.id)
-            )
-            
-            entry = Builder.process_game_historical(box_score, summarizer, use_season_totals)
-            if entry is not None:
-                data.append(entry)
-
-        if (len(data)) == 0:
+        games = sorted(games, key=lambda item: item[Keys.id])
+        game_stats = _summarizer.summarize_historical(games, data)
+        if game_stats.empty:
             logger.warning("None of the specified games have released rosters yet.")
             # TODO: Probably need something here for usability.  Maybe print out
             # a message, an empty results table or even update logging to send
             # warnings to the console?
             print("None of the specified games have released rosters yet.")
             return
-
-        df = pd.DataFrame(data)
-        df.columns = summarizer.get_headers()
-        targetsColumnName = df.columns[len(df.columns)-1]
-        actuals = df[targetsColumnName].to_list()
-        df.drop(targetsColumnName, axis=1, inplace=True)
-        data_pred = model.predict(df)
-
-        if len(data_pred) != len(actuals):
-            logger.error("Predictions and actual values vary in length")
-            return
-
+        data_pred = _model.predict(
+            game_stats
+            .sort_values(by=Keys.game_id)
+            .drop(columns=Keys.game_id)
+        )
         for i in range(len(data_pred)):
-            home_team = games[i]["homeTeam"]["commonName"]["default"]
-            away_team = games[i]["awayTeam"]["commonName"]["default"]
-            teams = f"{home_team} vs. {away_team}"
+            home_team = utl.json_value_or_default(
+                games[i],
+                Keys.home_team,
+                Keys.common_name,
+                Keys.default
+            )
+            away_team = utl.json_value_or_default(
+                games[i],
+                Keys.away_team,
+                Keys.common_name,
+                Keys.default
+            )
             prediction = HomeOrAway(np.rint(data_pred[i]).astype(int)).name
-            actual = HomeOrAway(int(actuals[i])).name
-            results_table.append([teams, prediction, actual])
+            results_table.append([away_team, home_team, prediction, str(data_pred[i])])
 
-        utl.print_table(results_table)
+        utl.print_table(results_table, hasHeader=True)
+    
+    @staticmethod
+    def _ensure_summarizer() -> None:
+        """Ensures that the summarizer instance was created.
+        """
+        global _summarizer
+        if _summarizer:
+            pass
+        else:
+            _summarizer = SummarizerTypes.get_summarizer(
+                execution_context.summarizer_type
+            )
+    
+    @staticmethod
+    def _ensure_model() -> None:
+        """Make sure that the model has been loaded.
+        
+        TODO: Add some error checking here.
+        """
+        global _model
+        if _model:
+            pass
+        if execution_context.model:
+            model_filename = execution_context.model
+        else:
+            model_filename = f"{_summarizer.get_filename_prefix()}_{_model_filename_part}.pkl"
+        with open(os.path.join(execution_context.app_dir, model_filename), "rb") as file:
+            _model = load(file)

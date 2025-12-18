@@ -153,7 +153,7 @@ def predict(
     if game_id:
         Predictor.predict_single_game(algorithm, game_id)
     else:
-        Predictor.predict(algorithm, date, date_range)
+        Predictor.predict_by_date(algorithm, date, date_range)
 
 if __name__ == "__main__":
     """Main app entry point.

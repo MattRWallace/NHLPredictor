@@ -1,3 +1,5 @@
+from typing import List
+
 from daterangeparser import parse as drp
 from datetime import datetime, timedelta
 import dateutil.parser as parser
@@ -13,38 +15,68 @@ logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()
 
 class Predictor:
+    """Class to manage prediction operations.
+    """
     
-    @staticmethod
-    def predict(
+    def predict_by_date(
         algorithm: Algorithms,
         date: str = None,
         date_range: str = None,
-        use_season_totals: bool = False
     ) -> None:
-        games, num_games = Predictor._get_games(date, date_range)
-        match algorithm:
-            case Algorithms.linear_regression:
-                PredictLinearRegression.predict(
-                    games,
-                    num_games
-                )
-            case _:
-                logger.error("Invalid algorithm provided to predict.")
+        """Start a prediction based on a date or dates.
+
+        Args:
+            algorithm (Algorithms): Which ML algorithm to use.
+            date (str, optional): Single date filter. Defaults to None.
+            date_range (str, optional): Date range filter. Defaults to None.
+        """
+        games = Predictor._get_games(date, date_range)
+        Predictor._predict(algorithm, games)
     
     @staticmethod
     def predict_single_game(
         algorithm: Algorithms,
         game_id: str
-    ):
-        print(f"Placeholder. Algorithm: '{algorithm}', GameId: '{game_id}'.")
+    ) -> None:
+        """Starts a prediction based on a specific game ID.
+
+        Args:
+            algorithm (Algorithms): Which ML algorithm to use.
+            game_id (str): The ID of the game to predict.
+        """
+        game = Predictor._get_game_by_id(game_id)
+        Predictor._predict(algorithm, [game])
+    
+    @staticmethod
+    def _predict(
+        algorithm: Algorithms,
+        games: List[int]
+    ) -> None:
+        """Core predict method
+
+        Args:
+            algorithm (Algorithms): Which ML algorithm to use.
+            games (List[int]): List of game IDs to predict for.
+        """
+        match algorithm:
+            case Algorithms.linear_regression:
+                PredictLinearRegression.predict(games)
+            case _:
+                logger.error("Invalid algorithm provided to predict.")
     
     @staticmethod
     def list_games(
         date: str,
         date_range: str
-    ):
+    ) -> None:
+        """Print out a report of games on a given date or during a given date range.
+
+        Args:
+            date (str): Single date filter.
+            date_range (str): Date range filter.
+        """
         table = []
-        games, num_games = Predictor._get_games(date, date_range)
+        games = Predictor._get_games(date, date_range)
         table.append([Keys.game_id, Keys.away_team, Keys.home_team, Keys.game_state])
         for game in games:
             table.append([
@@ -58,7 +90,15 @@ class Predictor:
     @staticmethod
     def _parse_date_range(
         date_range: str
-    ) -> tuple[datetime, ...]:
+    ) -> tuple[datetime, datetime]:
+        """Parse a date range string into starting and ending datetime instances.
+
+        Args:
+            date_range (str): Date range to be parsed.
+
+        Returns:
+            tuple[datetime, datetime] Tuple with start and end datetime instances.
+        """
         date_range_start = date_range_end = None
         if date_range is not None:
             date_range_start, date_range_end = drp(date_range)
@@ -68,7 +108,16 @@ class Predictor:
     def _get_games(
         date: str,
         date_range: str
-    ):
+    ) -> List[object]:
+        """Get set of games schduled on a given date or during a given date range.
+
+        Args:
+            date (str): Single date filter.
+            date_range (str): Date range filter.
+
+        Returns:
+            List[object]: List of games matching provided date filters.
+        """
         date_range_start, date_range_end = Predictor._parse_date_range(date_range)
         if date is not None:
             date = parser.parse(date)
@@ -82,20 +131,47 @@ class Predictor:
 
     @staticmethod
     def _get_games_for_date_range(
-        date_range_start,
-        date_range_end
-    ) -> tuple[object, int]:
+        date_range_start: datetime,
+        date_range_end: datetime
+    ) -> List[object]:
+        """Get the set of games scheduled during a given date range.
+
+        Args:
+            date_range_start (datetime): Start of the date range filter.
+            date_range_end (datetime): End of the date range filter.
+
+        Returns:
+            List[object]: List of game JSON.
+        """
         games = []
-        number_of_games = 0
         number_of_days = (date_range_end - date_range_start).days + 1
         date_list = [date_range_end - timedelta(days=x) for x in range(number_of_days)]
         for date in date_list:
-            next_games, next_number = Predictor._get_games_for_date(date)
+            next_games = Predictor._get_games_for_date(date)
             games.extend(next_games)
-            number_of_games += next_number
-        return games, number_of_games
+        return games
 
     @staticmethod
-    def _get_games_for_date(date) -> tuple[object, int]:
+    def _get_games_for_date(date: datetime) -> List[object]:
+        """Get the set of games scheduled on the given date.
+
+        Args:
+            date (datetime): Date filter for games.
+
+        Returns:
+            List[object]: List of game JSON.
+        """
         schedule = execution_context.client.schedule.daily_schedule(str(date)[:10])
-        return schedule["games"], schedule["numberOfGames"]
+        return schedule["games"]
+    
+    @staticmethod
+    def _get_game_by_id(id: int) -> List[object]:
+        """Get game by game ID
+
+        Args:
+            id (int): The game ID for the desired game.
+
+        Returns:
+            List[object]: List of game JSON.
+        """
+        return execution_context.client.game_center.boxscore(id)

@@ -5,5 +5,5 @@ class HomeOrAway(Enum):
     Designates a team as Home or Away.
     """
     AWAY = -1
-    NONE = 0
+    UNDECIDED = 0
     HOME = 1
