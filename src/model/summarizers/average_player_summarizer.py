@@ -221,7 +221,7 @@ class AveragePlayerSummarizer(Summarizer):
         skaters_reduced = self._flatten_home_and_away_by_game(skaters_reduced, Keys.skater_prefix)
         
         goalies_db = data[DB.goalie_stats_table_name]
-        goalies_reduced = self._group_and_flatten_goalie_stats(goalies_db)
+        goalies_reduced = self._group_and_flatten_goalies_by_game(goalies_db)
         goalies_reduced = self._flatten_home_and_away_by_game(goalies_reduced, Keys.goalie_prefix)        
 
         return pd.merge(
