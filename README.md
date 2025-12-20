@@ -5,9 +5,58 @@ This project started with a combination of me wanting a project that would give 
 `pip install NHL-predictor`
 
 ## Usage
-This is a CLI only app implemented using Typer. As such, you can see the usage at any time with the --help argument.
+This is a CLI only app implemented using [Typer](https://typer.tiangolo.com/). As such, you can see the usage at any time with the `--help` argument.
 
-![nhlpredict --help](https://raw.githubusercontent.com/MattRWallace/NHLPredictor/refs/heads/screenshots/screenshots/nhlpredictor.png)
+![nhlpredictor --help](https://raw.githubusercontent.com/MattRWallace/NHLPredictor/refs/heads/screenshots/screenshots/nhlpredictor.png)
+
+The app flow should progress from build -> train -> predict. For example, you might run the following commands:
+
+```
+$ nhlpredictor build --all-seasons
+$ nhlpredictor train --algorithm linearregression --output Average_LinearRegressionModel.pkl --summarizer-type average
+$ nhlpredictor predict --algorithm linearregression --summarizer-type average --model Average_LinearRegressionModel.pkl
+```
+
+After running the train operation you will find statistics about the model displayed in the console.  It should look something like this:
+
+```
+Stats from train operation:
+┌───────────────────────┬──────────────────────┐
+│  R-squared            │  0.7542777015007675  │
+│  Mean squared error:  │  0.24                │
+└───────────────────────┴──────────────────────┘
+PValues:
+┌────────────────────────────────────────┬──────────────────────────┐
+│  const                                 │  9.405692100270518e-01   │
+│  skater_goals_home                     │  9.186727854315457e-25   │
+│  skater_assists_home                   │  6.844242313622373e-24   │
+...
+│  goalie_shorthandedSavesAgainst_away   │  4.8229048152259835e-01  │
+│  goalie_saveSavesAgainst_away          │  9.045808182232136e-01   │
+└────────────────────────────────────────┴──────────────────────────┘
+Stats from test operation:
+┌───────────────────────┬──────────────────────┐
+│  R-squared:           │  0.7626640893213292  │
+│  Mean squared error:  │  0.24                │
+└───────────────────────┴──────────────────────┘
+PValues:
+┌────────────────────────────────────────┬──────────────────────────┐
+│  const                                 │  5.053272997277648e-01   │
+│  skater_goals_home                     │  2.475192098045989e-10   │
+│  skater_assists_home                   │  1.8078109513387622e-10  │
+...
+│  goalie_shorthandedSavesAgainst_away   │  6.267330479434402e-01   │
+│  goalie_saveSavesAgainst_away          │  5.923671437683795e-01   │
+└────────────────────────────────────────┴──────────────────────────┘
+
+```
+
+Note, that these stats are printed out as part of the work done in TrainLinearRegression (see implementation details below for more information). If you add your own ML algorithms, any such information that you want provided will need to be implemented by you.
+
+### Logs
+Logging is provided by the logging package.  See src/nhl_predictor/shared/logging_config.py for the shared logging configuration. I use the [jog](https://github.com/qiangyt/jog) log viewer and have included, in source control, the configuration file I use for formatting those logs. To use, try `jog -f -c src/nhl_predictor/shared/config.jog.yaml buildData.log` from the repo root.
+
+If you installed using pip instead of pulling the github repo yourself, you can download the config file directly from github or you can search in the site-packages folder where NHL-predictor was installed and locate it there; if you're unclear what that is, run `pip show NHL-predictor` and look at the Location property.
 
 ## Design
 
