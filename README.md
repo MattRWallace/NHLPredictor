@@ -1,11 +1,15 @@
 # NHL Predictor
-This project started with me wanting a project that would give me the opportunity to practice and really internalize the python syntax that I was learning and my discovery that the NHL has a publicly available API where I could obtain stats.
+This project started with a combination of me wanting a project that would give me the opportunity to practice and really internalize the python syntax that I was learning and my discovery that the NHL has a publicly available API where I could obtain stats. I decided that I wanted to try and use some of the ML knowledge I picked up in college to see if I could successfully predict the outcomes of NHL hockey games.
+
+## Install
+`pip install NHL-predictor`
 
 ## Usage
+TODO
 
 ## Design
 
-**Tech used**: Python, SQLite
+**Tech used**: Python, SQLite, SqliteDict, Pandas, SKLearn
 The app is CLI only and there are 3 main commands that structure the behavior of the app: Build, Train and Predict. While there is more detailed documentation later in this document, I will briefly summarize them here.
 
 ### Components
