@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "NHL-predictor"
-version = "0.3.0"
+version = "0.3.2"
 authors = [
     { name="Matthew Wallace", email="matthew.r.wallace@live.com" }
 ]
@@ -27,11 +27,7 @@ nhlpredictor = "nhl_predictor.main:app"
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "src/nhl_predictor/builder",
-    "src/nhl_predictor/model", 
-    "src/nhl_predictor/predictor",
-    "src/nhl_predictor/shared",
-    "src/nhl_predictor/trainer"
+    "src/nhl_predictor",
 ]
 
 [tool.hatch.build.targets.wheel.sources]
