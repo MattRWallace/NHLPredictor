@@ -3,7 +3,7 @@ requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
 
 [project]
-name = "NHLL-predictor"
+name = "NHL-predictor"
 version = "0.3.0"
 authors = [
     { name="Matthew Wallace", email="matthew.r.wallace@live.com" }
