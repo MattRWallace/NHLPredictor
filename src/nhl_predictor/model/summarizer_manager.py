@@ -1,8 +1,8 @@
 from __future__ import annotations
 from enum import Enum
 
-import model.summarizers.average_player_summarizer as avsum
-from model.summarizers.summarizer import Summarizer
+import nhl_predictor.model.summarizers.average_player_summarizer as avsum
+from nhl_predictor.model.summarizers.summarizer import Summarizer
 
 
 class SummarizerTypes(str, Enum):

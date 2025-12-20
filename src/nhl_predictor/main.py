@@ -4,10 +4,10 @@ from typing import List, Optional
 import typer
 from typing_extensions import Annotated
 
-from model.algorithms import Algorithms
-from model.seasons import Seasons
-from model.summarizer_manager import SummarizerTypes
-from shared.execution_context import ExecutionContext
+from nhl_predictor.model.algorithms import Algorithms
+from nhl_predictor.model.seasons import Seasons
+from nhl_predictor.model.summarizer_manager import SummarizerTypes
+from nhl_predictor.shared.execution_context import ExecutionContext
 
 # TODO: Review the CLI again.  Is there a pythonic way to do parameter sets?
 

@@ -6,16 +6,15 @@ import requests
 from ansimarkup import ansiprint as print
 from sqlitedict import SqliteDict
 
-import shared.execution_context
-from model.game_state import GameState, GameStatesForDataset
-from model.game_type import GameType, SupportedGameTypes
-from model.home_or_away import HomeOrAway
-from model.seasons import Seasons
-from model.team_map import TeamMap
-from shared.constants.database import Database as DB
-from shared.constants.json import JSON as Keys
-from shared.logging_config import LoggingConfig
-from shared.utility import Utility as utl
+from nhl_predictor.model.game_state import GameState, GameStatesForDataset
+from nhl_predictor.model.game_type import GameType, SupportedGameTypes
+from nhl_predictor.model.home_or_away import HomeOrAway
+from nhl_predictor.model.seasons import Seasons
+from nhl_predictor.model.team_map import TeamMap
+from nhl_predictor.shared.constants.database import Database as DB
+from nhl_predictor.shared.constants.json import JSON as Keys
+from nhl_predictor.shared.logging_config import LoggingConfig
+from nhl_predictor.shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = shared.execution_context.ExecutionContext()

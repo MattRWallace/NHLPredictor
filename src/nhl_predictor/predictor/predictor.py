@@ -4,12 +4,12 @@ from daterangeparser import parse as drp
 from datetime import datetime, timedelta
 import dateutil.parser as parser
 
-from model.algorithms import Algorithms
-from predictor.linear_regression import PredictLinearRegression
-from shared.constants.json import JSON as Keys
-from shared.execution_context import ExecutionContext
-from shared.logging_config import LoggingConfig
-from shared.utility import Utility as utl
+from nhl_predictor.model.algorithms import Algorithms
+from nhl_predictor.predictor.linear_regression import PredictLinearRegression
+from nhl_predictor.shared.constants.json import JSON as Keys
+from nhl_predictor.shared.execution_context import ExecutionContext
+from nhl_predictor.shared.logging_config import LoggingConfig
+from nhl_predictor.shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()

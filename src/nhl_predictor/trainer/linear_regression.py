@@ -8,11 +8,11 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 
-from model.summarizer_manager import SummarizerTypes
-from shared.constants.database import Database as DB
-from shared.execution_context import ExecutionContext
-from shared.logging_config import LoggingConfig
-from shared.utility import Utility as utl
+from nhl_predictor.model.summarizer_manager import SummarizerTypes
+from nhl_predictor.shared.constants.database import Database as DB
+from nhl_predictor.shared.execution_context import ExecutionContext
+from nhl_predictor.shared.logging_config import LoggingConfig
+from nhl_predictor.shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()

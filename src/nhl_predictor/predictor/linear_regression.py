@@ -1,18 +1,17 @@
 import os
 from pickle import load
-from typing import Dict, List
+from typing import List
 
 import numpy as np
 import pandas as pd
 
-from model.home_or_away import HomeOrAway
-from model.summarizers.summarizer import Summarizer
-from model.summarizer_manager import SummarizerTypes
-from shared.constants.database import Database as DB
-from shared.execution_context import ExecutionContext
-from shared.logging_config import LoggingConfig
-from shared.constants.json import JSON as Keys
-from shared.utility import Utility as utl
+from nhl_predictor.model.home_or_away import HomeOrAway
+from nhl_predictor.model.summarizer_manager import SummarizerTypes
+from nhl_predictor.shared.constants.database import Database as DB
+from nhl_predictor.shared.execution_context import ExecutionContext
+from nhl_predictor.shared.logging_config import LoggingConfig
+from nhl_predictor.shared.constants.json import JSON as Keys
+from nhl_predictor.shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()

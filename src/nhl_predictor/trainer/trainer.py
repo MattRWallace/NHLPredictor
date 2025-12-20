@@ -1,6 +1,6 @@
-from model.algorithms import Algorithms
-from shared.logging_config import LoggingConfig
-from trainer.linear_regression import TrainLinearRegression
+from nhl_predictor.model.algorithms import Algorithms
+from nhl_predictor.shared.logging_config import LoggingConfig
+from nhl_predictor.trainer.linear_regression import TrainLinearRegression
 
 logger = LoggingConfig.get_logger(__name__)
 

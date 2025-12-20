@@ -3,13 +3,13 @@ from typing import Dict
 import pandas as pd
 from sqlitedict import SqliteDict
 
-from model.home_or_away import HomeOrAway
-from model.summarizers.summarizer import Summarizer
-from shared.constants.database import Database as DB
-from shared.constants.json import JSON as Keys
-from shared.execution_context import ExecutionContext
-from shared.logging_config import LoggingConfig
-from shared.utility import Utility as utl
+from nhl_predictor.model.home_or_away import HomeOrAway
+from nhl_predictor.model.summarizers.summarizer import Summarizer
+from nhl_predictor.shared.constants.database import Database as DB
+from nhl_predictor.shared.constants.json import JSON as Keys
+from nhl_predictor.shared.execution_context import ExecutionContext
+from nhl_predictor.shared.logging_config import LoggingConfig
+from nhl_predictor.shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
 execution_context = ExecutionContext()
