@@ -68,7 +68,7 @@ def build(
     if app_dir:
         context.app_dir = app_dir
 
-    from builder.builder import Builder
+    from nhl_predictor.builder.builder import Builder
     if report:
         Builder.report()
     else:
@@ -98,7 +98,7 @@ def train(
     context.allow_update = update
     context.summarizer_type = summarizer_type
     
-    from trainer.trainer import Trainer
+    from nhl_predictor.trainer.trainer import Trainer
     Trainer.train(algorithm)
 
 @app.command()
@@ -147,7 +147,7 @@ def predict(
     context.model = model
     context.summarizer_type = summarizer_type
     
-    from predictor.predictor import Predictor
+    from nhl_predictor.predictor.predictor import Predictor
     if list:
         Predictor.list_games(date, date_range)
     if game_id:
