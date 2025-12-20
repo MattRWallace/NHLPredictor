@@ -5,11 +5,13 @@ This project started with a combination of me wanting a project that would give 
 `pip install NHL-predictor`
 
 ## Usage
-TODO
+This is a CLI only app implemented using Typer. As such, you can see the usage at any time with the --help argument.
+
+![nhlpredict --help](https://raw.githubusercontent.com/MattRWallace/NHLPredictor/refs/heads/screenshots/screenshots/nhlpredictor.png)
 
 ## Design
 
-**Tech used**: Python, SQLite, SqliteDict, Pandas, SKLearn
+**Tech used**: Python, SQLite, SqliteDict, Pandas, SKLearn, Typer
 The app is CLI only and there are 3 main commands that structure the behavior of the app: Build, Train and Predict. While there is more detailed documentation later in this document, I will briefly summarize them here.
 
 ### Components
