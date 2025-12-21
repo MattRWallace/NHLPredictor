@@ -8,9 +8,9 @@ import pandas as pd
 from nhl_predictor.model.home_or_away import HomeOrAway
 from nhl_predictor.model.summarizer_manager import SummarizerTypes
 from nhl_predictor.shared.constants.database import Database as DB
+from nhl_predictor.shared.constants.json import JSON as Keys
 from nhl_predictor.shared.execution_context import ExecutionContext
 from nhl_predictor.shared.logging_config import LoggingConfig
-from nhl_predictor.shared.constants.json import JSON as Keys
 from nhl_predictor.shared.utility import Utility as utl
 
 logger = LoggingConfig.get_logger(__name__)
@@ -43,16 +43,13 @@ class PredictLinearRegression:
         PredictLinearRegression._ensure_model()
 
         if not games:
-            # TODO: Check as precondition?
             logger.warning("No games on the schedule for chosen date(s).")
+            print("No games on the schedule for the chosed date(s).")
             return
         games = sorted(games, key=lambda item: item[Keys.id])
         game_stats = _summarizer.summarize_historical(games, data)
         if game_stats.empty:
             logger.warning("None of the specified games have released rosters yet.")
-            # TODO: Probably need something here for usability.  Maybe print out
-            # a message, an empty results table or even update logging to send
-            # warnings to the console?
             print("None of the specified games have released rosters yet.")
             return
         data_pred = _model.predict(
@@ -93,8 +90,6 @@ class PredictLinearRegression:
     @staticmethod
     def _ensure_model() -> None:
         """Make sure that the model has been loaded.
-        
-        TODO: Add some error checking here.
         """
         global _model
         if _model:

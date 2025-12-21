@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from enum import Enum
 
 import nhl_predictor.model.summarizers.average_player_summarizer as avsum
@@ -28,5 +29,4 @@ class SummarizerTypes(str, Enum):
             case SummarizerTypes.average_player_summarizer:
                 return avsum.AveragePlayerSummarizer()
             case _:
-                # TODO: Shouldn't throw generic Exception
                 raise Exception("Unsupported summarizer specified.")

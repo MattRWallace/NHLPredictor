@@ -1,6 +1,6 @@
 ansimarkup==2.1.0
 DateRangeParser==1.3.2
-nhlpy==0.3.0
+nhl-api-py==3.0.2
 numpy==2.4.0
 pandas==2.3.3
 python_dateutil==2.9.0.post0

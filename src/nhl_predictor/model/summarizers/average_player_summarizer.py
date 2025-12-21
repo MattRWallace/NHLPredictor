@@ -59,7 +59,6 @@ class AveragePlayerSummarizer(Summarizer):
         """
         
         self._cleanup_data(data)
-        # TODO: Can/should we do this in the cleanup method?
         data[DB.skater_stats_table_name] = data[DB.skater_stats_table_name].set_index(Keys.game_id)
         data[DB.goalie_stats_table_name] = data[DB.goalie_stats_table_name].set_index(Keys.game_id)
         
@@ -113,7 +112,6 @@ class AveragePlayerSummarizer(Summarizer):
         skaters_db = data[DB.skater_stats_table_name]
         goalies_db = data[DB.goalie_stats_table_name]
 
-        # TODO: Fix build-stage bug introducing duplicates then remove this.
         skaters_db = skaters_db.groupby([Keys.game_id, Keys.player_id]).first().reset_index()
         goalies_db = goalies_db.groupby([Keys.game_id, Keys.player_id]).first().reset_index()
         
@@ -165,11 +163,6 @@ class AveragePlayerSummarizer(Summarizer):
             Keys.save_saves_against: int
         })
     
-    # The shot columns provide us with shots againsts, saves against and goals
-    # against. Since saves + goals = shots, this may be too much information.
-    # There are several columns like this that may be introducing duplicates
-    # when split.
-    # TODO: Need to unpack if these relationships are bad for the model.
     def _split_compound_goalie_stats(
         self,
         goalies: pd.DataFrame
@@ -286,7 +279,7 @@ class AveragePlayerSummarizer(Summarizer):
             pd.DataFrame: DataFrame joining the data set DataFrame with the winner data.
         """
         games_db = data[DB.games_table_name]
-        games_db.index.name = Keys.game_id # TODO: We should fix this on the build side
+        games_db.index.name = Keys.game_id
         wins = pd.DataFrame(games_db[Keys.winner])
         wins.index = wins.index.astype(int)
         return pd.merge(
@@ -345,12 +338,12 @@ class AveragePlayerSummarizer(Summarizer):
             Keys.assists: method,
             Keys.points: method,
             Keys.plus_minus: method,
-            # PIM TODO
+            # PIM 
             Keys.hits: method,
             Keys.power_play_goals: method,
             Keys.sog: method,
-            # faceoffWinningPctg TODO
-            # TOI TODO
+            # faceoffWinningPctg
+            # TOI
             Keys.blocked_shots: method,
             Keys.shifts: method,
             Keys.giveaways: method,
@@ -406,15 +399,15 @@ class AveragePlayerSummarizer(Summarizer):
             Keys.power_play_shots_against: method,
             Keys.shorthanded_shots_against: method,
             Keys.save_shots_against: method,
-            #Keys.save_pctg: goalies_grouped.apply(lambda x: (x[Keys.saves]/x[Keys.shots_against])) TODO
+            #Keys.save_pctg: goalies_grouped.apply(lambda x: (x[Keys.saves]/x[Keys.shots_against]))
             Keys.even_strength_goals_against: method,
             Keys.power_play_goals_against: method,
             Keys.shorthanded_goals_against: method,
             Keys.pim: method,
             Keys.goals_against: method,
-            #TOI TODO
-            #starter TODO
-            #decision TODO
+            #TOI
+            #starter
+            #decision
             Keys.shots_against: method,
             Keys.saves: method,
             Keys.even_strength_saves_against: method,

@@ -1,8 +1,8 @@
+from datetime import datetime, timedelta
 from typing import List
 
-from daterangeparser import parse as drp
-from datetime import datetime, timedelta
 import dateutil.parser as parser
+from daterangeparser import parse as drp
 
 from nhl_predictor.model.algorithms import Algorithms
 from nhl_predictor.predictor.linear_regression import PredictLinearRegression
@@ -109,7 +109,7 @@ class Predictor:
         date: str,
         date_range: str
     ) -> List[object]:
-        """Get set of games schduled on a given date or during a given date range.
+        """Get set of games scheduled on a given date or during a given date range.
 
         Args:
             date (str): Single date filter.
@@ -125,9 +125,8 @@ class Predictor:
         elif date_range_start is not None and date_range_end is not None:
             return Predictor._get_games_for_date_range(date_range_start, date_range_end)
         else:
-            # TODO: Throw?
             logger.error("No valid date option supplied")
-            return
+            raise Exception("Invalid date option specified.")
 
     @staticmethod
     def _get_games_for_date_range(
