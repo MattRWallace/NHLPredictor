@@ -42,8 +42,6 @@ class TrainLinearRegression:
 
         train, test = train_test_split(game_data, test_size=0.2)
 
-        # TODO: This assumes that the last column is our winner column.  The
-        # summarizer needs to either guarantee this or return them separately.
         targetsColumnName = train.columns[len(train.columns)-1]
         train_targets = train[targetsColumnName].to_list()
         train.drop(targetsColumnName, axis=1, inplace=True)

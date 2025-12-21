@@ -9,8 +9,6 @@ from nhl_predictor.model.seasons import Seasons
 from nhl_predictor.model.summarizer_manager import SummarizerTypes
 from nhl_predictor.shared.execution_context import ExecutionContext
 
-# TODO: Review the CLI again.  Is there a pythonic way to do parameter sets?
-
 app = typer.Typer()
 
 # Option definition for specifying a summarizer.
@@ -122,8 +120,6 @@ def predict(
             "\n\nParsing of date range is performed by daterangeparser. See "
             "documentation for supported formats: "
             "https://daterangeparser.readthedocs.io/en/latest/\n"
-            "\033[91m THIS IS NOT IMPLEMENTED YET.\033[91m"
-            #TODO: Remove the not implemented disclaimer when appropriate
         )
     )] = None,
     list: Annotated[bool, typer.Option(

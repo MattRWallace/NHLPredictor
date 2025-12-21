@@ -5,6 +5,9 @@ from typing import Dict, List
 import pandas as pd
 from sqlitedict import SqliteDict
 
+from nhl_predictor.shared.logging_config import LoggingConfig
+
+logger = LoggingConfig.get_logger(__name__)
 
 class Utility:
     """Static class with utility methods.
@@ -21,9 +24,6 @@ class Utility:
         Check the json_data for a value associated with the provided key.  If no
         such key exists, return the default value instead.
 
-        TODO: Use dictionary unpacking to manage multiple indexing.
-        TODO: Update all the dictionary indexing with this method.
-
         Args:
             json_data (Dict[str, object]): Data to parse value from.
             default (int, optional): Default value to return if any failure occurs.
@@ -38,7 +38,7 @@ class Utility:
                 value = value[key]
             return value
         except KeyError:
-            # TODO: Log
+            logger.warning("KeyError in json_value_or_default, returning default value. Default: '{default}'.")
             return default
 
     @staticmethod
@@ -113,19 +113,18 @@ class Utility:
         return os.path.join(path, "NHLPredictor.sqlite")
     
     @staticmethod
-    def split_save_try_pair(value: str) -> tuple[int, ...]:
+    def split_compound_value(value: str, delim: str = '/') -> tuple[int, ...]:
         """Method to split columns using compound values separated by a known
         delimeter.
         
-        TODO: We should generalize this.
-
         Args:
             value (str): Value to be split
+            delim (str): The delimiter to split on. Defaults to '/'.
 
         Returns:
             tuple[int, ...]: Tuple containing the separated values.
         """
-        parts = str(value).split('/')
+        parts = str(value).split(delim)
         parts = [int(part) for part in parts]
 
         return tuple(parts)

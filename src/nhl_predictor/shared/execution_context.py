@@ -124,7 +124,6 @@ class ExecutionContext:
             Exception: Thrown if application directory is already set.
             RuntimeError: Thrown if path is invalid.
         """
-        # TODO: shouldn't use general exceptions
         if ExecutionContext._app_dir_set:
             raise Exception("File path already set.")
         value = os.path.expanduser(value)
