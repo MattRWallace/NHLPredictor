@@ -14,7 +14,7 @@ The app flow should progress from build -> train -> predict. For example, you mi
 ```
 $ nhlpredictor build --all-seasons
 $ nhlpredictor train --algorithm linearregression --output Average_LinearRegressionModel.pkl --summarizer-type average
-$ nhlpredictor predict --algorithm linearregression --summarizer-type average --model Average_LinearRegressionModel.pkl
+$ nhlpredictor predict --algorithm linearregression --summarizer-type average --model Average_LinearRegressionModel.pkl --game-id 2025020563
 ```
 
 After running the train operation you will find statistics about the model displayed in the console.  It should look something like this:
