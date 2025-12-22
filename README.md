@@ -53,6 +53,16 @@ PValues:
 
 Note, that these stats are printed out as part of the work done in TrainLinearRegression (see implementation details below for more information). If you add your own ML algorithms, any such information that you want provided will need to be implemented by you.
 
+There is a predict option for the predict command that will conveniently list games based on the provided date filter.
+
+![List games by date](https://raw.githubusercontent.com/MattRWallace/NHLPredictor/refs/heads/screenshots/screenshots/nhlpredictor_list.png)
+
+When requesting a prediction, you can specify a specific game by the game ID which is in the listing.  You can also filter by date and get a determination for every game on that date.
+
+![Predict a single game](https://raw.githubusercontent.com/MattRWallace/NHLPredictor/refs/heads/screenshots/screenshots/nhlpredictor_predict.png)
+
+NOTE: Roster information is not added to the game object until the game actually starts which means that prior to that point, there is no data to make a prediction on. 
+
 ### Logs
 Logging is provided by the logging package.  See src/nhl_predictor/shared/logging_config.py for the shared logging configuration. I use the [jog](https://github.com/qiangyt/jog) log viewer and have included, in source control, the configuration file I use for formatting those logs. To use, try `jog -f -c src/nhl_predictor/shared/config.jog.yaml buildData.log` from the repo root.
 
