@@ -10,6 +10,7 @@ TODO
 ## Design
 
 **Tech used**: Python, SQLite, SqliteDict, Pandas, SKLearn
+
 The app is CLI only and there are 3 main commands that structure the behavior of the app: Build, Train and Predict. While there is more detailed documentation later in this document, I will briefly summarize them here.
 
 ### Components
